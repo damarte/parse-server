@@ -294,5 +294,6 @@ module.exports = {
   handleParseErrors: handleParseErrors,
   handleParseHeaders: handleParseHeaders,
   enforceMasterKeyAccess: enforceMasterKeyAccess,
-  promiseEnforceMasterKeyAccess
+  promiseEnforceMasterKeyAccess,
+  clientSDKFromVersion
 };
