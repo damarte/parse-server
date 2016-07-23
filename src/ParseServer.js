@@ -56,6 +56,7 @@ import * as ImportRelationRouter from './Routers/ImportRelationRouter';
 import { ExportRouter }         from './Routers/ExportRouter';
 
 import DatabaseController       from './Controllers/DatabaseController';
+import SchemaCache              from './Controllers/SchemaCache';
 const SchemaController = require('./Controllers/SchemaController');
 import ParsePushAdapter         from 'parse-server-push-adapter';
 import MongoStorageAdapter      from './Adapters/Storage/Mongo/MongoStorageAdapter';
@@ -135,6 +136,7 @@ class ParseServer {
     expireInactiveSessions = true,
     verbose = false,
     revokeSessionOnPasswordReset = true,
+    schemaCacheTTL = 5, // cache for 5s
     __indexBuildCompletionCallbackForTests = () => {},
   }) {
     // Initialize the node client SDK automatically
@@ -196,7 +198,7 @@ class ParseServer {
     const userController = new UserController(emailControllerAdapter, appId, { verifyUserEmails });
     const liveQueryController = new LiveQueryController(liveQuery);
     const cacheController = new CacheController(cacheControllerAdapter, appId);
-    const databaseController = new DatabaseController(databaseAdapter);
+    const databaseController = new DatabaseController(databaseAdapter, new SchemaCache(cacheController, schemaCacheTTL));
     const hooksController = new HooksController(appId, databaseController, webhookKey);
 
     // TODO: create indexes on first creation of a _User object. Otherwise it's impossible to
@@ -248,6 +250,7 @@ class ParseServer {
       emailControllerAdapter: emailControllerAdapter,
       revokeSessionOnPasswordReset,
       databaseController,
+      schemaCacheTTL
     });
 
     // To maintain compatibility. TODO: Remove in some version that breaks backwards compatability
