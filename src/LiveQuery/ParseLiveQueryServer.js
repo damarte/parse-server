@@ -57,17 +57,17 @@ class ParseLiveQueryServer {
     this.subscriber = ParsePubSub.createSubscriber({
       redisURL: config.redisURL
     });
-    this.subscriber.subscribe('afterSave');
-    this.subscriber.subscribe('afterDelete');
+    this.subscriber.subscribe(Parse.applicationId + 'afterSave');
+    this.subscriber.subscribe(Parse.applicationId + 'afterDelete');
     // Register message handler for subscriber. When publisher get messages, it will publish message
     // to the subscribers and the handler will be called.
     this.subscriber.on('message', (channel, messageStr) => {
       PLog.verbose('Subscribe messsage %j', messageStr);
       let message = JSON.parse(messageStr);
       this._inflateParseObject(message);
-      if (channel === 'afterSave') {
+      if (channel === Parse.applicationId + 'afterSave') {
         this._onAfterSave(message);
-      } else if (channel === 'afterDelete') {
+      } else if (channel === Parse.applicationId + 'afterDelete') {
         this._onAfterDelete(message);
       } else {
         PLog.error('Get message %s from unknown channel %j', message, channel);
@@ -100,7 +100,7 @@ class ParseLiveQueryServer {
   // Message is the JSON object from publisher after inflated. Message.currentParseObject is the ParseObject after changes.
   // Message.originalParseObject is the original ParseObject.
   _onAfterDelete(message: any): void {
-    PLog.verbose('afterDelete is triggered');
+    PLog.verbose(Parse.applicationId + 'afterDelete is triggered');
 
     let deletedParseObject = message.currentParseObject.toJSON();
     let className = deletedParseObject.className;
@@ -141,7 +141,7 @@ class ParseLiveQueryServer {
   // Message is the JSON object from publisher after inflated. Message.currentParseObject is the ParseObject after changes.
   // Message.originalParseObject is the original ParseObject.
   _onAfterSave(message: any): void {
-    PLog.verbose('afterSave is triggered');
+    PLog.verbose(Parse.applicationId + 'afterSave is triggered');
 
     let originalParseObject = null;
     if (message.originalParseObject) {
