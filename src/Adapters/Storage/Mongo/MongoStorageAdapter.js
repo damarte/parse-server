@@ -15,6 +15,7 @@ import _                     from 'lodash';
 
 let mongodb = require('mongodb');
 let MongoClient = mongodb.MongoClient;
+let ReadPreference = mongodb.ReadPreference;
 
 const MongoSchemaCollectionName = '_SCHEMA';
 
@@ -80,6 +81,7 @@ export class MongoStorageAdapter {
   _uri: string;
   _collectionPrefix: string;
   _mongoOptions: Object;
+  _geoQueryOnSecondary: boolean;
   // Public
   connectionPromise;
   database;
@@ -88,10 +90,12 @@ export class MongoStorageAdapter {
     uri = defaults.DefaultMongoURI,
     collectionPrefix = '',
     mongoOptions = {},
+    geoQueryOnSecondary = false,
   }) {
     this._uri = uri;
     this._collectionPrefix = collectionPrefix;
     this._mongoOptions = mongoOptions;
+    this._geoQueryOnSecondary = geoQueryOnSecondary;
   }
 
   connect() {
@@ -322,14 +326,18 @@ export class MongoStorageAdapter {
   // Executes a find. Accepts: className, query in Parse format, and { skip, limit, sort }.
   find(className, schema, query, { skip, limit, sort, keys }) {
     schema = convertParseSchemaToMongoSchema(schema);
-    let mongoWhere = transformWhere(className, query, schema);
+    let extraOut = {};
+    let mongoWhere = transformWhere(className, query, schema, extraOut);
     let mongoSort = _.mapKeys(sort, (value, fieldName) => transformKey(className, fieldName, schema));
     let mongoKeys = _.reduce(keys, (memo, key) => {
       memo[transformKey(className, key, schema)] = 1;
       return memo;
     }, {});
+    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+      ReadPreference.SECONDARY_PREFERRED :
+      undefined;
     return this._adaptiveCollection(className)
-    .then(collection => collection.find(mongoWhere, { skip, limit, sort: mongoSort, keys: mongoKeys }))
+    .then(collection => collection.find(mongoWhere, { skip, limit, sort: mongoSort, keys: mongoKeys, readPreference, }))
     .then(objects => objects.map(object => mongoObjectToParseObject(className, object, schema)))
   }
 
@@ -364,8 +372,13 @@ export class MongoStorageAdapter {
   // Executs a count.
   count(className, schema, query) {
     schema = convertParseSchemaToMongoSchema(schema);
+    let extraOut = {};
+    let mongoWhere = transformWhere(className, query, schema, extraOut);
+    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+      ReadPreference.SECONDARY_PREFERRED :
+      undefined;
     return this._adaptiveCollection(className)
-    .then(collection => collection.count(transformWhere(className, query, schema)));
+      .then(collection => collection.count(mongoWhere, { readPreference }));
   }
 
   performInitialization() {
