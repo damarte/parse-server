@@ -101,6 +101,7 @@ class ParseServer {
     logsFolder,
     databaseURI,
     databaseOptions,
+    geoQueryOnSecondary,
     databaseAdapter,
     cloud,
     collectionPrefix = '',
@@ -137,13 +138,14 @@ class ParseServer {
     Parse.initialize(appId, javascriptKey || 'unused', masterKey);
     Parse.serverURL = serverURL;
 
-    if ((databaseOptions || databaseURI || collectionPrefix !== '') && databaseAdapter) {
-      throw 'You cannot specify both a databaseAdapter and a databaseURI/databaseOptions/connectionPrefix.';
+    if ((geoQueryOnSecondary || databaseOptions || databaseURI || collectionPrefix !== '') && databaseAdapter) {
+      throw 'You cannot specify both a databaseAdapter and a databaseURI/databaseOptions/connectionPrefix/geoQueryOnSecondary.';
     } else if (!databaseAdapter) {
       databaseAdapter = new MongoStorageAdapter({
         uri: databaseURI,
         collectionPrefix,
         mongoOptions: databaseOptions,
+        geoQueryOnSecondary,
       });
     } else {
       databaseAdapter = loadAdapter(databaseAdapter)

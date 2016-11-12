@@ -15,6 +15,7 @@ import _                     from 'lodash';
 
 let mongodb = require('mongodb');
 let MongoClient = mongodb.MongoClient;
+let ReadPreference = mongodb.ReadPreference;
 
 const MongoSchemaCollectionName = '_SCHEMA';
 const DefaultMongoURI = 'mongodb://localhost:27017/parse';
@@ -81,6 +82,7 @@ export class MongoStorageAdapter {
   _uri: string;
   _collectionPrefix: string;
   _mongoOptions: Object;
+  _geoQueryOnSecondary: boolean;
   // Public
   connectionPromise;
   database;
@@ -89,10 +91,12 @@ export class MongoStorageAdapter {
     uri = DefaultMongoURI,
     collectionPrefix = '',
     mongoOptions = {},
+    geoQueryOnSecondary = false,
   }) {
     this._uri = uri;
     this._collectionPrefix = collectionPrefix;
     this._mongoOptions = mongoOptions;
+    this._geoQueryOnSecondary = geoQueryOnSecondary;
   }
 
   connect() {
@@ -310,11 +314,18 @@ export class MongoStorageAdapter {
   // Executes a find. Accepts: className, query in Parse format, and { skip, limit, sort }.
   find(className, schema, query, { skip, limit, sort }) {
     schema = convertParseSchemaToMongoSchema(schema);
-    let mongoWhere = transformWhere(className, query, schema);
+    let extraOut = {};
+    let mongoWhere = transformWhere(className, query, schema, extraOut);
     let mongoSort = _.mapKeys(sort, (value, fieldName) => transformKey(className, fieldName, schema));
+    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+      ReadPreference.SECONDARY_PREFERRED :
+      undefined;
     return this._adaptiveCollection(className)
-    .then(collection => collection.find(mongoWhere, { skip, limit, sort: mongoSort }))
-    .then(objects => objects.map(object => mongoObjectToParseObject(className, object, schema)))
+      .then(collection => collection.find(
+        mongoWhere,
+        { skip, limit, sort: mongoSort, readPreference }
+      ))
+      .then(objects => objects.map(object => mongoObjectToParseObject(className, object, schema)))
   }
 
   // Create a unique index. Unique indexes on nullable fields are not allowed. Since we don't
@@ -348,8 +359,13 @@ export class MongoStorageAdapter {
   // Executs a count.
   count(className, schema, query) {
     schema = convertParseSchemaToMongoSchema(schema);
+    let extraOut = {};
+    let mongoWhere = transformWhere(className, query, schema, extraOut);
+    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+      ReadPreference.SECONDARY_PREFERRED :
+      undefined;
     return this._adaptiveCollection(className)
-    .then(collection => collection.count(transformWhere(className, query, schema)));
+      .then(collection => collection.count(mongoWhere, { readPreference }));
   }
 }
 
