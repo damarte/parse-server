@@ -64,6 +64,7 @@ export class Config {
     this.liveQueryController = cacheInfo.liveQueryController;
     this.sessionLength = cacheInfo.sessionLength;
     this.expireInactiveSessions = cacheInfo.expireInactiveSessions;
+    this.emailControllerAdapter = cacheInfo.emailControllerAdapter;
     this.generateSessionExpiresAt = this.generateSessionExpiresAt.bind(this);
     this.generateEmailVerifyTokenExpiresAt = this.generateEmailVerifyTokenExpiresAt.bind(this);
     this.revokeSessionOnPasswordReset = cacheInfo.revokeSessionOnPasswordReset;

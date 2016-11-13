@@ -50,6 +50,9 @@ import { SessionsRouter }       from './Routers/SessionsRouter';
 import { UserController }       from './Controllers/UserController';
 import { UsersRouter }          from './Routers/UsersRouter';
 import { PurgeRouter }          from './Routers/PurgeRouter';
+import * as ImportRouter        from './Routers/ImportRouter';
+import * as ImportRelationRouter from './Routers/ImportRelationRouter';
+import { ExportRouter }         from './Routers/ExportRouter';
 
 import DatabaseController       from './Controllers/DatabaseController';
 import SchemaCache              from './Controllers/SchemaCache';
@@ -219,6 +222,7 @@ class ParseServer {
       liveQueryController: liveQueryController,
       sessionLength: Number(sessionLength),
       expireInactiveSessions: expireInactiveSessions,
+      emailControllerAdapter: emailControllerAdapter,
       jsonLogs,
       revokeSessionOnPasswordReset,
       databaseController,
@@ -287,6 +291,9 @@ class ParseServer {
     api.use('/', middlewares.allowCrossDomain, new FilesRouter().expressRouter({
       maxUploadSize: maxUploadSize
     }));
+    
+    api.use(ImportRouter.getRouter());
+    api.use(ImportRelationRouter.getRouter());
 
     api.use('/', bodyParser.urlencoded({extended: false}), new PublicAPIRouter().expressRouter());
 
@@ -333,6 +340,7 @@ class ParseServer {
       new FeaturesRouter(),
       new GlobalConfigRouter(),
       new PurgeRouter(),
+      new ExportRouter(),
       new HooksRouter(),
       new CloudCodeRouter()
     ];
