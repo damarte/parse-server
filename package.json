@@ -18,6 +18,8 @@
   ],
   "license": "BSD-3-Clause",
   "dependencies": {
+    "adm-zip": "0.4.7",
+    "archiver": "^1.2.0",
     "bcryptjs": "2.3.0",
     "body-parser": "1.15.2",
     "commander": "2.9.0",
@@ -38,12 +40,14 @@
     "redis": "2.6.3",
     "request": "2.79.0",
     "semver": "5.2.0",
+    "tmp": "0.0.31",
     "tv4": "1.2.7",
     "winston": "2.3.0",
     "winston-daily-rotate-file": "1.4.0",
     "ws": "1.1.1"
   },
   "devDependencies": {
+    "adm-zip": "^0.4.7",
     "babel-cli": "6.18.0",
     "babel-core": "6.18.2",
     "babel-eslint": "^7.1.1",
