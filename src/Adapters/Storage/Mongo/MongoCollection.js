@@ -36,14 +36,10 @@ export default class MongoCollection {
 
   _rawFind(query, { skip, limit, sort, keys, readPreference } = {}) {
     let findOperation = this._mongoCollection
-      .find(query, { skip, limit, sort })
+      .find(query, { skip, limit, sort, readPreference })
 
     if (keys) {
       findOperation = findOperation.project(keys);
-    }
-
-    if (readPreference) {
-      findOperation = findOperation.readPreference(readPreference);
     }
 
     return findOperation.toArray();
