@@ -66,6 +66,14 @@ const transformKeyValueForUpdate = (className, restKey, restValue, parseFormatSc
   case '_failed_login_count':
     key = '_failed_login_count';
     break;
+  case '_perishable_token_expires_at':
+    key = '_perishable_token_expires_at';
+    timeField = true;
+    break;
+  case '_password_changed_at':
+    key = '_password_changed_at';
+    timeField = true;
+    break;
   case '_rperm':
   case '_wperm':
     return {key: key, value: restValue};
@@ -171,6 +179,16 @@ function transformQueryKeyValue(className, key, value, schema, extraOut) {
   case '_failed_login_count':
     return {key, value};
   case 'sessionToken': return {key: '_session_token', value}
+  case '_perishable_token_expires_at':
+    if (valueAsDate(value)) {
+      return { key: '_perishable_token_expires_at', value: valueAsDate(value) }
+    }
+    break;
+  case '_password_changed_at':
+    if (valueAsDate(value)) {
+      return { key: '_password_changed_at', value: valueAsDate(value) }
+    }
+    break;
   case '_rperm':
   case '_wperm':
   case '_perishable_token':
@@ -187,6 +205,7 @@ function transformQueryKeyValue(className, key, value, schema, extraOut) {
       // Special-case auth data.
       return {key: `_auth_data_${provider}.id`, value};
     }
+  }
   }
 
   const expectedTypeIsArray =
@@ -251,6 +270,14 @@ const parseObjectKeyValueToMongoObjectKeyValue = (restKey, restValue, schema) =>
     transformedValue = transformTopLevelAtom(restValue);
     coercedToDate = typeof transformedValue === 'string' ? new Date(transformedValue) : transformedValue
     return {key: '_account_lockout_expires_at', value: coercedToDate};
+  case '_perishable_token_expires_at':
+    transformedValue = transformTopLevelAtom(restValue);
+    coercedToDate = typeof transformedValue === 'string' ? new Date(transformedValue) : transformedValue
+    return { key: '_perishable_token_expires_at', value: coercedToDate };
+  case '_password_changed_at':
+    transformedValue = transformTopLevelAtom(restValue);
+    coercedToDate = typeof transformedValue === 'string' ? new Date(transformedValue) : transformedValue
+    return { key: '_password_changed_at', value: coercedToDate };
   case '_failed_login_count':
   case '_rperm':
   case '_wperm':
@@ -307,6 +334,9 @@ const parseObjectToMongoObjectForCreate = (className, restCreate, schema) => {
   restCreate = addLegacyACL(restCreate);
   let mongoCreate = {}
   for (let restKey in restCreate) {
+    if (restCreate[restKey] && restCreate[restKey].__type === 'Relation') {
+      continue;
+    }
     let { key, value } = parseObjectKeyValueToMongoObjectKeyValue(
       restKey,
       restCreate[restKey],
@@ -347,6 +377,9 @@ const transformUpdate = (className, restUpdate, parseFormatSchema) => {
     }
   }
   for (var restKey in restUpdate) {
+    if (restUpdate[restKey] && restUpdate[restKey].__type === 'Relation') {
+      continue;
+    }
     var out = transformKeyValueForUpdate(className, restKey, restUpdate[restKey], parseFormatSchema);
 
     // If the output value is an object with any $ keys, it's an
@@ -499,8 +532,8 @@ function transformConstraint(constraint, inArray, extraOut) {
       break;
 
     case '$in':
-    case '$nin':
-      var arr = constraint[key];
+    case '$nin': {
+      let arr = constraint[key];
       if (!(arr instanceof Array)) {
         throw new Parse.Error(Parse.Error.INVALID_JSON, 'bad ' + key + ' value');
       }
@@ -512,16 +545,16 @@ function transformConstraint(constraint, inArray, extraOut) {
         return result;
       });
       break;
-
-    case '$all':
-      var arr = constraint[key];
+    }
+    case '$all': {
+      let arr = constraint[key];
       if (!(arr instanceof Array)) {
         throw new Parse.Error(Parse.Error.INVALID_JSON,
                               'bad ' + key + ' value');
       }
       answer[key] = arr.map(transformInteriorAtom);
       break;
-
+    }
     case '$regex':
       var s = constraint[key];
       if (typeof s !== 'string') {
@@ -723,7 +756,7 @@ const mongoObjectToParseObject = (className, mongoObject, schema) => {
   case 'symbol':
   case 'function':
     throw 'bad value in mongoObjectToParseObject';
-  case 'object':
+  case 'object': {
     if (mongoObject === null) {
       return null;
     }
@@ -767,6 +800,8 @@ const mongoObjectToParseObject = (className, mongoObject, schema) => {
         break;
       case '_email_verify_token':
       case '_perishable_token':
+      case '_perishable_token_expires_at':
+      case '_password_changed_at':
       case '_tombstone':
       case '_email_verify_token_expires_at':
       case '_account_lockout_expires_at':
@@ -853,6 +888,7 @@ const mongoObjectToParseObject = (className, mongoObject, schema) => {
     });
 
     return { ...restObject, ...relationFields };
+  }
   default:
     throw 'unknown js type';
   }

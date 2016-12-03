@@ -1,14 +1,13 @@
 // ParseServer - open-source compatible API Server for Parse apps
 
 var batch = require('./batch'),
-    bodyParser = require('body-parser'),
-    express = require('express'),
-    middlewares = require('./middlewares'),
-    multer = require('multer'),
-    Parse = require('parse/node').Parse,
-    path = require('path'),
-    url = require('url'),
-    authDataManager = require('./authDataManager');
+  bodyParser = require('body-parser'),
+  express = require('express'),
+  middlewares = require('./middlewares'),
+  Parse = require('parse/node').Parse,
+  path = require('path'),
+  url = require('url'),
+  authDataManager = require('./authDataManager');
 
 import defaults                 from './defaults';
 import * as logging             from './logger';
@@ -126,6 +125,7 @@ class ParseServer {
     preventLoginWithUnverifiedEmail = defaults.preventLoginWithUnverifiedEmail,
     emailVerifyTokenValidityDuration,
     accountLockout,
+    passwordPolicy,
     cacheAdapter,
     emailAdapter,
     publicServerURL,
@@ -211,6 +211,7 @@ class ParseServer {
       preventLoginWithUnverifiedEmail: preventLoginWithUnverifiedEmail,
       emailVerifyTokenValidityDuration: emailVerifyTokenValidityDuration,
       accountLockout: accountLockout,
+      passwordPolicy: passwordPolicy,
       allowClientClassCreation: allowClientClassCreation,
       authDataManager: authDataManager(oauth, enableAnonymousUsers),
       appName: appName,
@@ -234,6 +235,7 @@ class ParseServer {
 
     Config.validate(AppCache.get(appId));
     this.config = AppCache.get(appId);
+    Config.setupPasswordValidator(this.config.passwordPolicy);
     hooksController.load();
 
     // Note: Tests will start to fail if any validation happens after this is called.
@@ -308,7 +310,9 @@ class ParseServer {
     if (!process.env.TESTING) {
       process.on('uncaughtException', (err) => {
         if ( err.code === "EADDRINUSE" ) { // user-friendly message for this common error
+          /* eslint-disable no-console */
           console.error(`Unable to listen on port ${err.port}. The port is already in use.`);
+          /* eslint-enable no-console */
           process.exit(0);
         } else {
           throw err;

@@ -21,10 +21,10 @@ export default {
     required: true
   },
   "port": {
-     env: "PORT",
-     help: "The port to run the ParseServer. defaults to 1337.",
-     default: 1337,
-     action: numberParser("port")
+    env: "PORT",
+    help: "The port to run the ParseServer. defaults to 1337.",
+    default: 1337,
+    action: numberParser("port")
   },
   "databaseURI": {
     env: "PARSE_SERVER_DATABASE_URI",
@@ -141,6 +141,11 @@ export default {
     help: "account lockout policy for failed login attempts",
     action: objectParser
   },
+  "passwordPolicy": {
+    env: "PARSE_SERVER_PASSWORD_POLICY",
+    help: "Password policy for enforcing password related rules",
+    action: objectParser
+  },
   "appName": {
     env: "PARSE_SERVER_APP_NAME",
     help: "Sets the app name"
@@ -149,11 +154,6 @@ export default {
     env: "PARSE_SERVER_LOGGER_ADAPTER",
     help: "Adapter module for the logging sub-system",
     action: moduleOrObjectParser
-  },
-  "liveQuery": {
-    env: "PARSE_SERVER_LIVE_QUERY_OPTIONS",
-    help: "liveQuery options",
-    action: objectParser
   },
   "customPages": {
     env: "PARSE_SERVER_CUSTOM_PAGES",
@@ -210,7 +210,8 @@ export default {
     help: "Run with cluster, optionally set the number of processes default to os.cpus().length",
     action: numberOrBoolParser("cluster")
   },
-   "liveQuery": {
+  "liveQuery": {
+    env: "PARSE_SERVER_LIVE_QUERY_OPTIONS",
     help: "parse-server's LiveQuery configuration object",
     action: objectParser
   },
