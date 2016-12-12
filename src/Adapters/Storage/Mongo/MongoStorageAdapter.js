@@ -96,6 +96,7 @@ export class MongoStorageAdapter {
     this._collectionPrefix = collectionPrefix;
     this._mongoOptions = mongoOptions;
     this._geoQueryOnSecondary = geoQueryOnSecondary;
+    this._maxTimeMS = mongoOptions.maxTimeMS;
   }
 
   connect() {
@@ -337,7 +338,7 @@ export class MongoStorageAdapter {
       ReadPreference.SECONDARY_PREFERRED :
       undefined;
     return this._adaptiveCollection(className)
-    .then(collection => collection.find(mongoWhere, { skip, limit, sort: mongoSort, keys: mongoKeys, readPreference, }))
+    .then(collection => collection.find(mongoWhere, { skip, limit, sort: mongoSort, keys: mongoKeys, readPreference, maxTimeMS: this._maxTimeMS, }))
     .then(objects => objects.map(object => mongoObjectToParseObject(className, object, schema)))
   }
 
@@ -366,7 +367,9 @@ export class MongoStorageAdapter {
 
   // Used in tests
   _rawFind(className, query) {
-    return this._adaptiveCollection(className).then(collection => collection.find(query));
+    return this._adaptiveCollection(className).then(collection => collection.find(query, {
+      maxTimeMS: this._maxTimeMS,
+    }));
   }
 
   // Executs a count.
@@ -379,7 +382,7 @@ export class MongoStorageAdapter {
       undefined;
     readPreference = ReadPreference.SECONDARY_PREFERRED;
     return this._adaptiveCollection(className)
-      .then(collection => collection.count(mongoWhere, { readPreference }));
+      .then(collection => collection.count(mongoWhere, { readPreference, maxTimeMS: this._maxTimeMS, }));
   }
 
   performInitialization() {

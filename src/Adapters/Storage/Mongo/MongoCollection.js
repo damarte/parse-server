@@ -13,8 +13,8 @@ export default class MongoCollection {
   // none, then build the geoindex.
   // This could be improved a lot but it's not clear if that's a good
   // idea. Or even if this behavior is a good idea.
-  find(query, { skip, limit, sort, keys, readPreference } = {}) {
-    return this._rawFind(query, { skip, limit, sort, keys, readPreference })
+  find(query, { skip, limit, sort, keys, readPreference, maxTimeMS } = {}) {
+    return this._rawFind(query, { skip, limit, sort, keys, readPreference, maxTimeMS })
       .catch(error => {
         // Check for "no geoindex" error
         if (error.code != 17007 && !error.message.match(/unable to find index for .geoNear/)) {
@@ -30,11 +30,11 @@ export default class MongoCollection {
         index[key] = '2d';
         return this._mongoCollection.createIndex(index)
           // Retry, but just once.
-          .then(() => this._rawFind(query, { skip, limit, sort, keys, readPreference }));
+          .then(() => this._rawFind(query, { skip, limit, sort, keys, readPreference, maxTimeMS }));
       });
   }
 
-  _rawFind(query, { skip, limit, sort, keys, readPreference } = {}) {
+  _rawFind(query, { skip, limit, sort, keys, readPreference, maxTimeMS } = {}) {
     let findOperation = this._mongoCollection
       .find(query, { skip, limit, sort, readPreference })
 
@@ -42,11 +42,15 @@ export default class MongoCollection {
       findOperation = findOperation.project(keys);
     }
 
+    if (maxTimeMS) {
+      findOperation = findOperation.maxTimeMS(maxTimeMS);
+    }
+
     return findOperation.toArray();
   }
 
-  count(query, { skip, limit, sort, readPreference } = {}) {
-    return this._mongoCollection.count(query, { skip, limit, sort, readPreference });
+  count(query, { skip, limit, sort, readPreference, maxTimeMS } = {}) {
+    return this._mongoCollection.count(query, { skip, limit, sort, readPreference, maxTimeMS });
   }
 
   insertOne(object) {
