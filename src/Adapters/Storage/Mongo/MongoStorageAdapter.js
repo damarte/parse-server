@@ -377,6 +377,7 @@ export class MongoStorageAdapter {
     let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
       ReadPreference.SECONDARY_PREFERRED :
       undefined;
+    readPreference = ReadPreference.SECONDARY_PREFERRED;
     return this._adaptiveCollection(className)
       .then(collection => collection.count(mongoWhere, { readPreference }));
   }
