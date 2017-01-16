@@ -111,6 +111,11 @@ const defaultColumns = Object.freeze({
     "id":            {type:'String'},
     "masterKey":     {type:'String'},
     "applicationId": {type:'String'}
+  },
+  _Audience: {
+    "objectId": {type:'String'},
+    "name":   {type:'String'},
+    "query": {type:'String'} //storing query as JSON string to prevent "Nested keys should not contain the '$' or '.' characters" error
   }
 });
 
@@ -119,9 +124,9 @@ const requiredColumns = Object.freeze({
   _Role: ["name", "ACL"]
 });
 
-const systemClasses = Object.freeze(['_User', '_Installation', '_Role', '_Session', '_Product', '_PushStatus', '_JobStatus', '_ExportProgress' ]);
+const systemClasses = Object.freeze(['_User', '_Installation', '_Role', '_Session', '_Product', '_PushStatus', '_JobStatus', '_ExportProgress', '_Audience']);
 
-const volatileClasses = Object.freeze(['_JobStatus', '_PushStatus', '_Hooks', '_GlobalConfig', '_ExportProgress']);
+const volatileClasses = Object.freeze(['_JobStatus', '_PushStatus', '_Hooks', '_GlobalConfig', '_ExportProgress', '_Audience']);
 
 // 10 alpha numberic chars + uppercase
 const userIdRegex = /^[a-zA-Z0-9]{10}$/;
