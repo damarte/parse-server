@@ -105,11 +105,21 @@ class MongoSchemaCollection {
 
   constructor(collection: MongoCollection) {
     this._collection = collection;
+    this._cache = null;
+    this._cacheTime = null;
   }
 
   _fetchAllSchemasFrom_SCHEMA() {
-    return this._collection._rawFind({})
-    .then(schemas => schemas.map(mongoSchemaToParseSchema));
+    if (this._cache && this._cacheTime && ((new Date()).getTime() - this._cacheTime.getTime())/1000 <= 60) {
+      return Promise.resolve(_cache);
+    } else {
+      return this._collection._rawFind({})
+        .then((schemas) => {
+          this._cacheTime = new Date();
+          this._cache = schemas.map(mongoSchemaToParseSchema);
+          return this._cache;
+        });
+    }
   }
 
   _fechOneSchemaFrom_SCHEMA(name: string) {
@@ -124,14 +134,20 @@ class MongoSchemaCollection {
 
   // Atomically find and delete an object based on query.
   findAndDeleteSchema(name: string) {
+    this._cache = null;
+    this._cacheTime = null;
     return this._collection._mongoCollection.findAndRemove(_mongoSchemaQueryFromNameQuery(name), []);
   }
 
   updateSchema(name: string, update) {
+    this._cache = null;
+    this._cacheTime = null;
     return this._collection.updateOne(_mongoSchemaQueryFromNameQuery(name), update);
   }
 
   upsertSchema(name: string, query: string, update) {
+    this._cache = null;
+    this._cacheTime = null;
     return this._collection.upsertOne(_mongoSchemaQueryFromNameQuery(name, query), update);
   }
 
