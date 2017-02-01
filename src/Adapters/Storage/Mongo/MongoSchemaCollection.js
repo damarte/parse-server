@@ -107,10 +107,11 @@ class MongoSchemaCollection {
     this._collection = collection;
     this._cache = null;
     this._cacheTime = null;
+    this._fetchAllSchemasFrom_SCHEMA();
   }
 
   _fetchAllSchemasFrom_SCHEMA() {
-    if (this._cache && this._cacheTime && ((new Date()).getTime() - this._cacheTime.getTime())/1000 <= 60) {
+    if (this._cache && this._cacheTime && ((new Date()).getTime() - this._cacheTime.getTime()) <= 600000) {
       return Promise.resolve(_cache);
     } else {
       return this._collection._rawFind({})
