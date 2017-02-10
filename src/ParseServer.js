@@ -13,6 +13,7 @@ import defaults                 from './defaults';
 import * as logging             from './logger';
 import AppCache                 from './cache';
 import Config                   from './Config';
+import parseServerPackage       from '../package.json';
 import PromiseRouter            from './PromiseRouter';
 import requiredParameter        from './requiredParameter';
 import { AnalyticsRouter }      from './Routers/AnalyticsRouter';
@@ -43,12 +44,16 @@ import { PushQueue }            from './Push/PushQueue';
 import { PushWorker }           from './Push/PushWorker';
 import { PushRouter }           from './Routers/PushRouter';
 import { CloudCodeRouter }      from './Routers/CloudCodeRouter';
+import { randomString }         from './cryptoUtils';
 import { RolesRouter }          from './Routers/RolesRouter';
 import { SchemasRouter }        from './Routers/SchemasRouter';
 import { SessionsRouter }       from './Routers/SessionsRouter';
 import { UserController }       from './Controllers/UserController';
 import { UsersRouter }          from './Routers/UsersRouter';
 import { PurgeRouter }          from './Routers/PurgeRouter';
+import * as ImportRouter        from './Routers/ImportRouter';
+import * as ImportRelationRouter from './Routers/ImportRelationRouter';
+import { ExportRouter }         from './Routers/ExportRouter';
 
 import DatabaseController       from './Controllers/DatabaseController';
 import SchemaCache              from './Controllers/SchemaCache';
@@ -75,6 +80,8 @@ addParseCloud();
 //          to register your cloud code hooks and functions.
 // "appId": the application id to host
 // "masterKey": the master key for requests to this app
+// "facebookAppIds": an array of valid Facebook Application IDs, required
+//                   if using Facebook login
 // "collectionPrefix": optional prefix for database collection names
 // "fileKey": optional key from Parse dashboard for supporting older files
 //            hosted by Parse
@@ -103,6 +110,7 @@ class ParseServer {
     silent = defaults.silent,
     databaseURI = defaults.DefaultMongoURI,
     databaseOptions,
+    geoQueryOnSecondary,
     databaseAdapter,
     cloud,
     collectionPrefix = '',
@@ -112,6 +120,7 @@ class ParseServer {
     restAPIKey,
     webhookKey,
     fileKey,
+    facebookAppIds = [],
     userSensitiveFields = [],
     enableAnonymousUsers = defaults.enableAnonymousUsers,
     allowClientClassCreation = defaults.allowClientClassCreation,
@@ -144,16 +153,16 @@ class ParseServer {
     // Initialize the node client SDK automatically
     Parse.initialize(appId, javascriptKey || 'unused', masterKey);
     Parse.serverURL = serverURL;
-    if ((databaseOptions || (databaseURI && databaseURI != defaults.DefaultMongoURI) || collectionPrefix !== '') && databaseAdapter) {
-      throw 'You cannot specify both a databaseAdapter and a databaseURI/databaseOptions/collectionPrefix.';
+    if ((databaseOptions || (databaseURI && databaseURI != defaults.DefaultMongoURI) || collectionPrefix !== '' || geoQueryOnSecondary !== undefined) && databaseAdapter) {
+      throw 'You cannot specify both a databaseAdapter and a databaseURI/databaseOptions/collectionPrefix/geoQueryOnSecondary.';
     } else if (!databaseAdapter) {
-      databaseAdapter = this.getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions)
+      databaseAdapter = this.getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions, geoQueryOnSecondary)
     } else {
       databaseAdapter = loadAdapter(databaseAdapter)
     }
 
     if (!filesAdapter && !databaseURI) {
-      throw 'When using an explicit database adapter, you must also use an explicit filesAdapter.';
+      throw 'When using an explicit database adapter, you must also use and explicit filesAdapter.';
     }
 
     userSensitiveFields = Array.from(new Set(userSensitiveFields.concat(
@@ -230,6 +239,7 @@ class ParseServer {
       restAPIKey: restAPIKey,
       webhookKey: webhookKey,
       fileKey: fileKey,
+      facebookAppIds: facebookAppIds,
       analyticsController: analyticsController,
       cacheController: cacheController,
       filesController: filesController,
@@ -261,6 +271,11 @@ class ParseServer {
       pushControllerQueue,
       hasPushSupport
     });
+
+    // To maintain compatibility. TODO: Remove in some version that breaks backwards compatability
+    if (process.env.FACEBOOK_APP_ID) {
+      AppCache.get(appId)['facebookAppIds'].push(process.env.FACEBOOK_APP_ID);
+    }
 
     Config.validate(AppCache.get(appId));
     this.config = AppCache.get(appId);
@@ -302,6 +317,7 @@ class ParseServer {
         uri: databaseURI,
         collectionPrefix,
         mongoOptions: databaseOptions,
+        geoQueryOnSecondary,
       });
     }
   }
@@ -319,6 +335,9 @@ class ParseServer {
     api.use('/', middlewares.allowCrossDomain, new FilesRouter().expressRouter({
       maxUploadSize: maxUploadSize
     }));
+    
+    api.use(ImportRouter.getRouter());
+    api.use(ImportRelationRouter.getRouter());
 
     api.use('/health', (req, res) => res.sendStatus(200));
 
