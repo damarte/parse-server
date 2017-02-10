@@ -98,6 +98,7 @@ export class MongoStorageAdapter {
     this._collectionPrefix = collectionPrefix;
     this._mongoOptions = mongoOptions;
     this._geoQueryOnSecondary = geoQueryOnSecondary;
+
     // MaxTimeMS is not a global MongoDB client option, it is applied per operation.
     this._maxTimeMS = mongoOptions.maxTimeMS;
   }
@@ -331,7 +332,7 @@ export class MongoStorageAdapter {
   find(className, schema, query, { skip, limit, sort, keys }) {
     schema = convertParseSchemaToMongoSchema(schema);
     let extraOut = {};
-    const mongoWhere = transformWhere(className, query, schema);
+    const mongoWhere = transformWhere(className, query, schema, extraOut);
     const mongoSort = _.mapKeys(sort, (value, fieldName) => transformKey(className, fieldName, schema));
     const mongoKeys = _.reduce(keys, (memo, key) => {
       memo[transformKey(className, key, schema)] = 1;
@@ -393,7 +394,7 @@ export class MongoStorageAdapter {
     return this._adaptiveCollection(className)
     .then(collection => collection.count(mongoWhere, {
       maxTimeMS: this._maxTimeMS,
-      readPreference,
+      readPreference: readPreference
     }));
   }
 
