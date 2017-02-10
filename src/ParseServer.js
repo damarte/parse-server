@@ -299,7 +299,7 @@ class ParseServer {
     }
   }
 
-  getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions) {
+  getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions, geoQueryOnSecondary) {
     let protocol;
     try {
       const parsedURI = url.parse(databaseURI);
