@@ -12,7 +12,7 @@ export class ClassesRouter extends PromiseRouter {
     let body = Object.assign(req.body, ClassesRouter.JSONFromQuery(req.query));
     let options = {};
     let allowConstraints = ['skip', 'limit', 'order', 'count', 'keys',
-      'include', 'redirectClassNameForKey', 'where'];
+      'include', 'redirectClassNameForKey', 'where', 'readPreference'];
 
     for (let key of Object.keys(body)) {
       if (allowConstraints.indexOf(key) === -1) {
@@ -45,6 +45,9 @@ export class ClassesRouter extends PromiseRouter {
     }
     if (typeof body.where === 'string') {
       body.where = JSON.parse(body.where);
+    }
+    if (typeof body.readPreference == 'string') {
+      options.readPreference = body.readPreference;
     }
     return rest.find(req.config, req.auth, req.params.className, body.where, options, req.info.clientSDK)
       .then((response) => {

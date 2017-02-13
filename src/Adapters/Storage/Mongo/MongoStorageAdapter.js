@@ -325,7 +325,7 @@ export class MongoStorageAdapter {
   }
 
   // Executes a find. Accepts: className, query in Parse format, and { skip, limit, sort }.
-  find(className, schema, query, { skip, limit, sort, keys }) {
+  find(className, schema, query, { skip, limit, sort, keys, readPreference }) {
     schema = convertParseSchemaToMongoSchema(schema);
     let extraOut = {};
     let mongoWhere = transformWhere(className, query, schema, extraOut);
@@ -334,9 +334,29 @@ export class MongoStorageAdapter {
       memo[transformKey(className, key, schema)] = 1;
       return memo;
     }, {});
-    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
-      ReadPreference.SECONDARY_PREFERRED :
-      undefined;
+    if (readPreference) {
+      switch (readPreference) {
+        case 'PRIMARY':
+          readPreference = ReadPreference.PRIMARY;
+          break;
+        case 'PRIMARY_PREFERRED':
+          readPreference = ReadPreference.PRIMARY_PREFERRED;
+          break;
+        case 'SECONDARY':
+          readPreference = ReadPreference.SECONDARY;
+          break;
+        case 'SECONDARY_PREFERRED':
+          readPreference = ReadPreference.SECONDARY_PREFERRED;
+          break;
+        default:
+          throw new Parse.Error(Parse.Error.INVALID_QUERY, 'Not supported read preference.');
+          break;
+      }
+    } else {
+      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+        ReadPreference.SECONDARY_PREFERRED :
+        undefined;
+    }
     return this._adaptiveCollection(className)
     .then(collection => collection.find(mongoWhere, { skip, limit, sort: mongoSort, keys: mongoKeys, readPreference, maxTimeMS: this._maxTimeMS, }))
     .then(objects => objects.map(object => mongoObjectToParseObject(className, object, schema)))

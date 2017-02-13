@@ -67,6 +67,7 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
       break;
     case 'skip':
     case 'limit':
+    case 'readPreference':
       this.findOptions[option] = restOptions[option];
       break;
     case 'order':
