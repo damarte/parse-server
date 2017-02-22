@@ -88,7 +88,7 @@ export class PushController extends AdaptableController {
       onPushStatusSaved(pushStatus.objectId);
       return badgeUpdate();
     }).then(() => {
-      return rest.find(config, auth, '_Installation', where);
+      return rest.find(config, auth, '_Installation', where, { readPreference: 'SECONDARY_PREFERRED' });
     }).then((response) => {
       if (!response.results) {
         return Promise.reject({error: 'PushController: no results in query'})
