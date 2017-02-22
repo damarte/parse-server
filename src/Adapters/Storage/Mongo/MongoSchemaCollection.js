@@ -108,12 +108,12 @@ class MongoSchemaCollection {
   }
 
   _fetchAllSchemasFrom_SCHEMA() {
-    return this._collection._rawFind({})
+    return this._collection._rawFind({}, { readPreference: 'SECONDARY_PREFERRED' })
     .then(schemas => schemas.map(mongoSchemaToParseSchema));
   }
 
   _fechOneSchemaFrom_SCHEMA(name: string) {
-    return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1 }).then(results => {
+    return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1, readPreference: 'SECONDARY_PREFERRED' }).then(results => {
       if (results.length === 1) {
         return mongoSchemaToParseSchema(results[0]);
       } else {
