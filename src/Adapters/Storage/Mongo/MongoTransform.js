@@ -528,6 +528,9 @@ function transformConstraint(constraint, inArray, extraOut) {
         throw new Parse.Error(Parse.Error.INVALID_JSON, 'bad regex: ' + s);
       }
       answer[key] = s;
+      if (extraOut) {
+        extraOut.hasRegex = true;
+      }
       break;
 
     case '$options':

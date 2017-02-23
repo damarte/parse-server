@@ -353,7 +353,7 @@ export class MongoStorageAdapter {
           break;
       }
     } else {
-      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery || extraOut.hasRegex ?
         ReadPreference.SECONDARY_PREFERRED :
         undefined;
     }
@@ -397,7 +397,7 @@ export class MongoStorageAdapter {
     schema = convertParseSchemaToMongoSchema(schema);
     let extraOut = {};
     let mongoWhere = transformWhere(className, query, schema, extraOut);
-    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery || extraOut.hasRegex ?
       ReadPreference.SECONDARY_PREFERRED :
       undefined;
     readPreference = ReadPreference.SECONDARY_PREFERRED;
