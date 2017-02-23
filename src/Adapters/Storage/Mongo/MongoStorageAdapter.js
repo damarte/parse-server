@@ -353,7 +353,7 @@ export class MongoStorageAdapter {
           break;
       }
     } else {
-      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery || extraOut.hasRegex ?
+      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery || extraOut.hasRegex || limit > 100 ?
         ReadPreference.SECONDARY_PREFERRED :
         undefined;
     }
