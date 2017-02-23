@@ -1,5 +1,8 @@
 import MongoCollection from './MongoCollection';
 
+let mongodb = require('mongodb');
+let ReadPreference = mongodb.ReadPreference;
+
 function mongoFieldToParseSchemaField(type) {
   if (type[0] === '*') {
     return {
@@ -108,12 +111,12 @@ class MongoSchemaCollection {
   }
 
   _fetchAllSchemasFrom_SCHEMA() {
-    return this._collection._rawFind({}, { readPreference: 'SECONDARY_PREFERRED' })
+    return this._collection._rawFind({}, { readPreference: ReadPreference.SECONDARY_PREFERRED })
     .then(schemas => schemas.map(mongoSchemaToParseSchema));
   }
 
   _fechOneSchemaFrom_SCHEMA(name: string) {
-    return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1, readPreference: 'SECONDARY_PREFERRED' }).then(results => {
+    return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1, readPreference: ReadPreference.SECONDARY_PREFERRED }).then(results => {
       if (results.length === 1) {
         return mongoSchemaToParseSchema(results[0]);
       } else {
