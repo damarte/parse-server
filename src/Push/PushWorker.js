@@ -40,7 +40,7 @@ export class PushWorker {
       subscriber.subscribe(this.channel);
       subscriber.on('message', (channel, messageStr) => {
         const workItem = JSON.parse(messageStr);
-        this.run(workItem);
+        this.getAndRun(workItem);
       });
     }
   }
@@ -70,7 +70,7 @@ export class PushWorker {
     pushStatus = pushStatusHandler(config, pushStatus.objectId);
     if (!isPushIncrementing(body)) {
       return this.adapter.send(body, installations, pushStatus.objectId).then((results) => {
-        return pushStatus.trackSent(results);
+        return pushStatus.trackSent((results && results.length) ? results : installations);
       });
     }
 
@@ -89,6 +89,21 @@ export class PushWorker {
       return this.sendToAdapter(payload, installations, pushStatus, config);
     });
     return Promise.all(promises);
+  }
+
+  getAndRun(workItem: any): Promise<*> {
+    var _this = this;
+    return this.subscriber.run(workItem)
+    .then(function (gotItem) {
+      if (gotItem) {
+        return _this.run(gotItem)
+          .then(function () {
+            return _this.getAndRun(gotItem)
+          })
+      } else {
+        return Promise.resolve();
+      }
+    })
   }
 }
 
