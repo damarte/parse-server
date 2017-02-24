@@ -47,7 +47,7 @@
     "ws": "2.2.0"
   },
   "devDependencies": {
-
+    "adm-zip": "^0.4.7",
     "babel-cli": "6.23.0",
     "babel-core": "6.23.1",
     "babel-eslint": "^7.1.1",
