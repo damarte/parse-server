@@ -51,8 +51,7 @@ import { SessionsRouter }       from './Routers/SessionsRouter';
 import { UserController }       from './Controllers/UserController';
 import { UsersRouter }          from './Routers/UsersRouter';
 import { PurgeRouter }          from './Routers/PurgeRouter';
-import * as ImportRouter        from './Routers/ImportRouter';
-import * as ImportRelationRouter from './Routers/ImportRelationRouter';
+import { ImportRouter }         from './Routers/ImportRouter';
 import { ExportRouter }         from './Routers/ExportRouter';
 import { AudiencesRouter }          from './Routers/AudiencesRouter';
 
@@ -262,6 +261,7 @@ class ParseServer {
       liveQueryController: liveQueryController,
       sessionLength: Number(sessionLength),
       expireInactiveSessions: expireInactiveSessions,
+      emailControllerAdapter: emailControllerAdapter,
       jsonLogs,
       revokeSessionOnPasswordReset,
       databaseController,
@@ -336,14 +336,12 @@ class ParseServer {
     api.use('/', middlewares.allowCrossDomain, new FilesRouter().expressRouter({
       maxUploadSize: maxUploadSize
     }));
-    
-    api.use(ImportRouter.getRouter());
-    api.use(ImportRelationRouter.getRouter());
 
     api.use('/health', (req, res) => res.sendStatus(200));
 
     api.use('/', bodyParser.urlencoded({extended: false}), new PublicAPIRouter().expressRouter());
 
+    api.use('/', middlewares.allowCrossDomain, new ImportRouter().expressRouter());
     api.use(bodyParser.json({ 'type': '*/*' , limit: maxUploadSize }));
     api.use(middlewares.allowCrossDomain);
     api.use(middlewares.allowMethodOverride);
@@ -389,6 +387,7 @@ class ParseServer {
       new FeaturesRouter(),
       new GlobalConfigRouter(),
       new PurgeRouter(),
+      new ExportRouter(),
       new HooksRouter(),
       new CloudCodeRouter(),
       new AudiencesRouter()

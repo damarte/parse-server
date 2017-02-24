@@ -1,71 +1,45 @@
 const Parse = require("parse/node");
 const request = require('request');
 const AdmZip = require('adm-zip');
-const dd = require('deep-diff');
 
 describe('Export router', () => {
-  it_exclude_dbs(['postgres'])('send success export mail', (done) => {
 
-    let results = [];
-    let headers = {
-      'Content-Type': 'application/json',
-      'X-Parse-Application-Id': 'test',
-      'X-Parse-Master-Key': 'test'
-    };
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Parse-Application-Id': 'test',
+    'X-Parse-Master-Key': 'test'
+  };
 
-    let emailAdapter = {
-      sendMail: ({text, link, to, subject}) => {
+  const createRecords = (itemCount) => {
+    const ExportTest = Parse.Object.extend("ExportTest");
 
-        expect(to).toEqual('my@email.com');
-        expect(subject).toEqual('Export completed');
+    const items = new Array(itemCount).fill().map((item, index) => {
 
-        request.get({ url: link, encoding: null }, function(err, res, zipFile) {
+      const exportTest = new ExportTest();
 
-          if(err) throw err;
+      exportTest.set('field1', `value1-${index}`);
+      exportTest.set('field2', `value2-${index}`);
 
-          let zip = new AdmZip(zipFile);
-          let zipEntries = zip.getEntries();
+      return exportTest;
+    });
 
-          expect(zipEntries.length).toEqual(1);
 
-          let entry = zipEntries.pop();
-          let text = entry.getData().toString('utf8');
-          let resultsToCompare = JSON.parse(text);
+    return Parse.Object.saveAll(items);
+  };
 
-          expect(dd(results, resultsToCompare)).toEqual();
+  it_exclude_dbs(['postgres'])('should create export progress', (done) => {
 
-          done();
-        });
-      }
-    }
     reconfigureServer({
-      emailAdapter: emailAdapter
+      emailAdapter : {
+        sendMail : () => {
+          done();
+        }
+      }
     })
     .then(() => {
-
-      let ExportTest = Parse.Object.extend("ExportTest");
-      let exportTest = new ExportTest();
-
-      return exportTest
-      .save({
-        field1: 'value1',
-        field2: 'value2',
-      })
-      .then(data => {
-        request.get(
-          {
-            headers: headers,
-            url: 'http://localhost:8378/1/classes/ExportTest',
-          },
-          (err, response, body) => {
-            results = JSON.parse(body);
-          }
-        );
-
-      });
+      return createRecords(3000);
     })
     .then(() => {
-
       request.put(
         {
           headers: headers,
@@ -75,9 +49,89 @@ describe('Export router', () => {
             feedbackEmail: 'my@email.com'
           })
         },
+        () => {
+
+          request.get(
+            {
+              headers: headers,
+              url: 'http://localhost:8378/1/export_progress'
+            },
+            (err, response, body) => {
+
+              const progress = JSON.parse(body);
+
+              expect(progress instanceof Array).toBe(true);
+              expect(progress.length).toBe(1);
+
+              if (progress.length) {
+                expect(progress[0].id).toBe('ExportTest');
+              }
+
+            });
+        }
+      );
+    }
+    );
+  });
+
+  it_exclude_dbs(['postgres'])('send success export mail', (done) => {
+
+    let results = [];
+
+    const emailAdapter = {
+      sendMail: ({ link, to, subject}) => {
+
+        expect(to).toEqual('my@email.com');
+        expect(subject).toEqual('Export completed');
+
+        request.get({ url: link, encoding: null }, function(err, res, zipFile) {
+
+          if(err) throw err;
+
+          const zip = new AdmZip(zipFile);
+          const zipEntries = zip.getEntries();
+
+          expect(zipEntries.length).toEqual(1);
+
+          const entry = zipEntries.pop();
+          const text = entry.getData().toString('utf8');
+          const resultsToCompare = JSON.parse(text);
+
+          expect(results.length).toEqual(resultsToCompare.length);
+
+          done();
+        });
+      }
+    }
+    reconfigureServer({
+      emailAdapter: emailAdapter
+    })
+    .then(() => {
+      return createRecords(2176);
+    })
+    .then(() => {
+      request.get(
+        {
+          headers: headers,
+          url: 'http://localhost:8378/1/classes/ExportTest',
+        },
         (err, response, body) => {
-          expect(err).toBe(null);
-          expect(body).toEqual('"We are exporting your data. You will be notified by e-mail once it is completed."');
+          results = JSON.parse(body);
+
+          request.put(
+            {
+              headers: headers,
+              url: 'http://localhost:8378/1/export_data',
+              body: JSON.stringify({
+                name: 'ExportTest',
+                feedbackEmail: 'my@email.com'
+              })
+            },
+            (err, response, body) => {
+              expect(err).toBe(null);
+              expect(body).toEqual('"We are exporting your data. You will be notified by e-mail once it is completed."');
+            }
+          );
         }
       );
     });

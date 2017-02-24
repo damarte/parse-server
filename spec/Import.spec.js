@@ -3,7 +3,7 @@ const request = require('request');
 
 describe('Import routers', () => {
   it_exclude_dbs(['postgres'])('import objects from file with array', (done) => {
-    let headers = {
+    const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
       'X-Parse-Master-Key': 'test'
@@ -25,8 +25,10 @@ describe('Import routers', () => {
         }
       },
       (err) => {
+
         expect(err).toBe(null);
-        let query = new Parse.Query('TestObject');
+
+        const query = new Parse.Query('TestObject');
         query.ascending('column1');
         query.find().then((results) => {
           expect(results.length).toEqual(2);
@@ -41,7 +43,7 @@ describe('Import routers', () => {
   });
 
   it_exclude_dbs(['postgres'])('import objects from file with results field', (done) => {
-    let headers = {
+    const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
       'X-Parse-Master-Key': 'test'
@@ -66,7 +68,7 @@ describe('Import routers', () => {
       },
       (err) => {
         expect(err).toBe(null);
-        let query = new Parse.Query('TestObject');
+        const query = new Parse.Query('TestObject');
         query.ascending('column1');
         query.find().then((results) => {
           expect(results.length).toEqual(2);
@@ -81,7 +83,7 @@ describe('Import routers', () => {
   });
 
   it_exclude_dbs(['postgres'])('import objects with all data types', (done) => {
-    let headers = {
+    const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
       'X-Parse-Master-Key': 'test'
@@ -136,7 +138,7 @@ describe('Import routers', () => {
       },
       (err) => {
         expect(err).toBe(null);
-        let query = new Parse.Query('TestObject');
+        const query = new Parse.Query('TestObject');
         query.ascending('column1');
         query.find().then((results) => {
           expect(results.length).toEqual(1);
@@ -158,7 +160,7 @@ describe('Import routers', () => {
   });
 
   it_exclude_dbs(['postgres'])('import objects with object id', (done) => {
-    let headers = {
+    const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
       'X-Parse-Master-Key': 'test'
@@ -193,7 +195,7 @@ describe('Import routers', () => {
       },
       (err) => {
         expect(err).toBe(null);
-        let query = new Parse.Query('TestObject');
+        const query = new Parse.Query('TestObject');
         query.ascending('data');
         query.find().then((results) => {
           expect(results.length).toEqual(2);
@@ -206,7 +208,7 @@ describe('Import routers', () => {
   });
 
   it_exclude_dbs(['postgres'])('update objects with existing object id', (done) => {
-    let headers = {
+    const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
       'X-Parse-Master-Key': 'test'
@@ -259,7 +261,7 @@ describe('Import routers', () => {
           },
           (err) => {
             expect(err).toBe(null);
-            let query = new Parse.Query('TestObject');
+            const query = new Parse.Query('TestObject');
             query.ascending('data');
             query.find().then((results) => {
               expect(results.length).toEqual(2);
@@ -276,12 +278,12 @@ describe('Import routers', () => {
   });
 
   it_exclude_dbs(['postgres'])('send success import mail', (done) => {
-    let emailAdapter = {
+    const emailAdapter = {
       sendMail: ({text, to, subject}) => {
         expect(text).toEqual('We have successfully imported your data to the class TestObject.');
         expect(to).toEqual('my@email.com');
         expect(subject).toEqual('Import completed');
-        let query = new Parse.Query('TestObject');
+        const query = new Parse.Query('TestObject');
         query.ascending('column1');
         query.find().then((results) => {
           expect(results.length).toEqual(2);
@@ -296,7 +298,7 @@ describe('Import routers', () => {
     reconfigureServer({
       emailAdapter: emailAdapter
     }).then(() => {
-      let headers = {
+      const headers = {
         'Content-Type': 'multipart/form-data',
         'X-Parse-Application-Id': 'test',
         'X-Parse-Master-Key': 'test'
@@ -322,22 +324,22 @@ describe('Import routers', () => {
         },
         (err, response, body) => {
           expect(err).toBe(null);
-          expect(body).toEqual('{"response":"We are importing your data. You will be notified by e-mail once it is completed."}');
+          expect(JSON.parse(body).response).toEqual('We are importing your data. You will be notified by e-mail once it is completed.');
         }
       );
     });
   });
 
   it_exclude_dbs(['postgres'])('import relations object from file', (done) => {
-    let headers = {
+    const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
       'X-Parse-Master-Key': 'test'
     };
 
-    let object = new Parse.Object('TestObjectDad');
-    let relatedObject = new Parse.Object('TestObjectChild');
-    let ids = {};
+    const object = new Parse.Object('TestObjectDad');
+    const relatedObject = new Parse.Object('TestObjectChild');
+    const ids = {};
     Parse.Object.saveAll([object, relatedObject]).then(() => {
       object.relation('RelationObject').add(relatedObject);
       return object.save();
@@ -386,9 +388,9 @@ describe('Import routers', () => {
   });
 
   it_exclude_dbs(['postgres'])('send success import mail in the import relation', (done) => {
-    let object = new Parse.Object('TestObjectDad');
-    let relatedObject = new Parse.Object('TestObjectChild');
-    let ids = {};
+    const object = new Parse.Object('TestObjectDad');
+    const relatedObject = new Parse.Object('TestObjectChild');
+    const ids = {};
     Parse.Object.saveAll([object, relatedObject]).then(() => {
       object.relation('RelationObject').add(relatedObject);
       return object.save();
@@ -404,7 +406,7 @@ describe('Import routers', () => {
       })
       .then((savedObj) => {
         ids.b = savedObj.id;
-        let emailAdapter = {
+        const emailAdapter = {
           sendMail: ({text, to, subject}) => {
             expect(text).toEqual('We have successfully imported your data to the class TestObjectDad, relation RelationObject.');
             expect(to).toEqual('my@email.com');
@@ -419,7 +421,7 @@ describe('Import routers', () => {
         reconfigureServer({
           emailAdapter: emailAdapter
         }).then(() => {
-          let headers = {
+          const headers = {
             'Content-Type': 'multipart/form-data',
             'X-Parse-Application-Id': 'test',
             'X-Parse-Master-Key': 'test'
