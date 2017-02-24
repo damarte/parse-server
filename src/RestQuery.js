@@ -510,6 +510,12 @@ function includePath(config, auth, response, path, restOptions = {}) {
     }
   }
 
+  if (restOptions.readPreference) {
+    includeRestOptions.readPreference = restOptions.readPreference;
+  } else if (restOptions.limit && restOptions.limit > 100) {
+    includeRestOptions.readPreference = 'SECONDARY_PREFERRED';
+  }
+
   let queryPromises = Object.keys(pointersHash).map((className) => {
     let where = {'objectId': {'$in': Array.from(pointersHash[className])}};
     var query = new RestQuery(config, auth, className, where, includeRestOptions);
