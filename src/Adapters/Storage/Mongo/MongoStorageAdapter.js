@@ -348,6 +348,7 @@ export class MongoStorageAdapter {
       sort: mongoSort,
       keys: mongoKeys,
       maxTimeMS: this._maxTimeMS,
+      readPreference,
     }))
     .then(objects => objects.map(object => mongoObjectToParseObject(className, object, schema)))
   }
