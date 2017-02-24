@@ -54,6 +54,7 @@ import { PurgeRouter }          from './Routers/PurgeRouter';
 import * as ImportRouter        from './Routers/ImportRouter';
 import * as ImportRelationRouter from './Routers/ImportRelationRouter';
 import { ExportRouter }         from './Routers/ExportRouter';
+import { AudiencesRouter }          from './Routers/AudiencesRouter';
 
 import DatabaseController       from './Controllers/DatabaseController';
 import SchemaCache              from './Controllers/SchemaCache';
@@ -389,7 +390,8 @@ class ParseServer {
       new GlobalConfigRouter(),
       new PurgeRouter(),
       new HooksRouter(),
-      new CloudCodeRouter()
+      new CloudCodeRouter(),
+      new AudiencesRouter()
     ];
 
     const routes = routers.reduce((memo, router) => {

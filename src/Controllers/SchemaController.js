@@ -105,6 +105,11 @@ const defaultColumns = Object.freeze({
   _GlobalConfig: {
     "objectId": {type: 'String'},
     "params": {type: 'Object'}
+  },
+  _Audience: {
+    "objectId": {type:'String'},
+    "name":   {type:'String'},
+    "query": {type:'String'} //storing query as JSON string to prevent "Nested keys should not contain the '$' or '.' characters" error
   }
 });
 
@@ -113,9 +118,9 @@ const requiredColumns = Object.freeze({
   _Role: ["name", "ACL"]
 });
 
-const systemClasses = Object.freeze(['_User', '_Installation', '_Role', '_Session', '_Product', '_PushStatus', '_JobStatus']);
+const systemClasses = Object.freeze(['_User', '_Installation', '_Role', '_Session', '_Product', '_PushStatus', '_JobStatus', '_Audience']);
 
-const volatileClasses = Object.freeze(['_JobStatus', '_PushStatus', '_Hooks', '_GlobalConfig']);
+const volatileClasses = Object.freeze(['_JobStatus', '_PushStatus', '_Hooks', '_GlobalConfig', '_Audience']);
 
 // 10 alpha numberic chars + uppercase
 const userIdRegex = /^[a-zA-Z0-9]{10}$/;
@@ -334,29 +339,25 @@ export default class SchemaController {
     if (this.reloadDataPromise && !options.clearCache) {
       return this.reloadDataPromise;
     }
+    this.data = {};
+    this.perms = {};
     this.reloadDataPromise = promise.then(() => {
       return this.getAllClasses(options);
     })
     .then(allSchemas => {
-      const data = {};
-      const perms = {};
       allSchemas.forEach(schema => {
-        data[schema.className] = injectDefaultSchema(schema).fields;
-        perms[schema.className] = schema.classLevelPermissions;
+        this.data[schema.className] = injectDefaultSchema(schema).fields;
+        this.perms[schema.className] = schema.classLevelPermissions;
       });
 
       // Inject the in-memory classes
       volatileClasses.forEach(className => {
         const schema = injectDefaultSchema({ className });
-        data[className] = schema.fields;
-        perms[className] = schema.classLevelPermissions;
+        this.data[className] = schema.fields;
+        this.perms[className] = schema.classLevelPermissions;
       });
-      this.data = data;
-      this.perms = perms;
       delete this.reloadDataPromise;
     }, (err) => {
-      this.data = {};
-      this.perms = {};
       delete this.reloadDataPromise;
       throw err;
     });
