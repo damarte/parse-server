@@ -82,6 +82,7 @@ export class MongoStorageAdapter {
   _collectionPrefix: string;
   _mongoOptions: Object;
   _geoQueryOnSecondary: boolean;
+  _readOnSecondaryClasses: Array;
   // Public
   connectionPromise;
   database;
@@ -91,11 +92,13 @@ export class MongoStorageAdapter {
     collectionPrefix = '',
     mongoOptions = {},
     geoQueryOnSecondary = false,
+    readOnSecondaryClasses = [],
   }) {
     this._uri = uri;
     this._collectionPrefix = collectionPrefix;
     this._mongoOptions = mongoOptions;
     this._geoQueryOnSecondary = geoQueryOnSecondary;
+    this._readOnSecondaryClasses = readOnSecondaryClasses;
     this._maxTimeMS = mongoOptions.maxTimeMS;
   }
 
@@ -353,7 +356,7 @@ export class MongoStorageAdapter {
           break;
       }
     } else {
-      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery || extraOut.hasRegex || limit > 100 ?
+      readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery || this._readOnSecondaryClasses && this._readOnSecondaryClasses.indexOf(className) >= 0 || extraOut.hasRegex || limit > 100 ?
         ReadPreference.SECONDARY_PREFERRED :
         undefined;
     }
