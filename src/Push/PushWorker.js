@@ -58,7 +58,7 @@ export class PushWorker {
     delete query.where;
     return rest.find(config, auth, '_Installation', where, query).then(({results}) => {
       if (results.length == 0) {
-        return;
+        return pushStatus.trackSent(results);
       }
       return this.sendToAdapter(body, results, pushStatus, config);
     }, err => {
@@ -70,7 +70,7 @@ export class PushWorker {
     pushStatus = pushStatusHandler(config, pushStatus.objectId);
     if (!isPushIncrementing(body)) {
       return this.adapter.send(body, installations, pushStatus.objectId).then((results) => {
-        return pushStatus.trackSent((results && results.length) ? results : installations);
+        return pushStatus.trackSent(results, installations.length - results.length);
       });
     }
 
@@ -93,8 +93,10 @@ export class PushWorker {
 
   getAndRun(workItem: any): Promise<*> {
     var _this = this;
-    return this.subscriber.run(workItem)
-    .then(function (gotItem) {
+    if (!_this.subscriber.run) {
+      return _this.run(workItem);
+    }
+    return _this.subscriber.run(workItem).then(function (gotItem) {
       if (gotItem) {
         return _this.run(gotItem)
           .then(function () {
@@ -103,7 +105,7 @@ export class PushWorker {
       } else {
         return Promise.resolve();
       }
-    })
+    });
   }
 }
 

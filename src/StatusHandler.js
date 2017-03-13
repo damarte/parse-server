@@ -150,7 +150,7 @@ export function pushStatusHandler(config, objectId = newObjectId()) {
         {status: "running", updatedAt: new Date(), count });
   }
 
-  const trackSent = function(results) {
+  const trackSent = function(results, failedNum = 0) {
     const update = {
       updatedAt: new Date(),
       numSent: 0,
@@ -173,7 +173,8 @@ export function pushStatusHandler(config, objectId = newObjectId()) {
         }
         return memo;
       }, update);
-      incrementOp(update, 'count', -results.length);
+      update.numFailed += failedNum;
+      incrementOp(update, 'count', -(results.length + failedNum));
     }
 
     logger.verbose(`_PushStatus ${objectId}: sent push! %d success, %d failures`, update.numSent, update.numFailed);
