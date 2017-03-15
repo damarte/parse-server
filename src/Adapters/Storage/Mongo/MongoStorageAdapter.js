@@ -331,14 +331,14 @@ export class MongoStorageAdapter {
   // Executes a find. Accepts: className, query in Parse format, and { skip, limit, sort }.
   find(className, schema, query, { skip, limit, sort, keys }) {
     schema = convertParseSchemaToMongoSchema(schema);
-    let extraOut = {};
+    const extraOut = {};
     const mongoWhere = transformWhere(className, query, schema, extraOut);
     const mongoSort = _.mapKeys(sort, (value, fieldName) => transformKey(className, fieldName, schema));
     const mongoKeys = _.reduce(keys, (memo, key) => {
       memo[transformKey(className, key, schema)] = 1;
       return memo;
     }, {});
-    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+    const readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
       ReadPreference.SECONDARY_PREFERRED :
       undefined;
     return this._adaptiveCollection(className)
@@ -386,9 +386,9 @@ export class MongoStorageAdapter {
   // Executes a count.
   count(className, schema, query) {
     schema = convertParseSchemaToMongoSchema(schema);
-    let extraOut = {};
-    let mongoWhere = transformWhere(className, query, schema, extraOut);
-    let readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
+    const extraOut = {};
+    const mongoWhere = transformWhere(className, query, schema, extraOut);
+    const readPreference = this._geoQueryOnSecondary && extraOut.hasGeoQuery ?
       ReadPreference.SECONDARY_PREFERRED :
       undefined;
     return this._adaptiveCollection(className)
