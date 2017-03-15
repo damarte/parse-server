@@ -66,7 +66,7 @@ describe('Export router', () => {
               if (progress.length) {
                 expect(progress[0].id).toBe('ExportTest');
               }
-
+              done();
             });
         }
       );
