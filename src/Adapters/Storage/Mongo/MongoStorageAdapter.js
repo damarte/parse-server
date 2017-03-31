@@ -83,6 +83,8 @@ export class MongoStorageAdapter {
   _mongoOptions: Object;
   _geoQueryOnSecondary: boolean;
   _readOnSecondaryClasses: Array;
+  _cachedCollections: Object;
+  _cacheController: Object;
   // Public
   connectionPromise;
   database;
@@ -93,12 +95,16 @@ export class MongoStorageAdapter {
     mongoOptions = {},
     geoQueryOnSecondary = false,
     readOnSecondaryClasses = [],
+    cachedCollections = {},
+    cacheController = null,
   }) {
     this._uri = uri;
     this._collectionPrefix = collectionPrefix;
     this._mongoOptions = mongoOptions;
     this._geoQueryOnSecondary = geoQueryOnSecondary;
     this._readOnSecondaryClasses = readOnSecondaryClasses;
+    this._cachedCollections = cachedCollections;
+    this._cacheController = cacheController;
     this._maxTimeMS = mongoOptions.maxTimeMS;
   }
 
@@ -134,7 +140,7 @@ export class MongoStorageAdapter {
   _adaptiveCollection(name: string) {
     return this.connect()
       .then(() => this.database.collection(this._collectionPrefix + name))
-      .then(rawCollection => new MongoCollection(rawCollection));
+      .then(rawCollection => new MongoCollection(rawCollection, this._cachedCollections, this._cacheController));
   }
 
   _schemaCollection() {

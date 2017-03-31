@@ -3,9 +3,13 @@ let Collection = mongodb.Collection;
 
 export default class MongoCollection {
   _mongoCollection:Collection;
+  _cachedCollections:Object;
+  _cacheController:Object;
 
-  constructor(mongoCollection:Collection) {
+  constructor(mongoCollection:Collection, cachedCollections:Array, cacheController) {
     this._mongoCollection = mongoCollection;
+    this._cachedCollections = cachedCollections;
+    this._cacheController = cacheController;
   }
 
   // Does a find with "smart indexing".
@@ -35,18 +39,137 @@ export default class MongoCollection {
   }
 
   _rawFind(query, { skip, limit, sort, keys, readPreference, maxTimeMS } = {}) {
-    let findOperation = this._mongoCollection
-      .find(query, { skip, limit, sort, readPreference })
+    let cacheResults = [];
+    let mongoResults = [];
+    let mongoNeeded = true;
+    let mongoCollection = this._mongoCollection;
+    let cachedCollections = this._cachedCollections;
+    let cacheController = this._cacheController;
 
-    if (keys) {
-      findOperation = findOperation.project(keys);
+    function findFromCache() {
+      if (cachedCollections && cachedCollections[mongoCollection.collectionName]) {
+        if (!query || query == {}) {
+          return cacheController.get('ClassCache:' + mongoCollection.collectionName).then((results) => {
+            if (results) {
+              cacheResults = results;
+              mongoNeeded = false;
+            }
+          });
+        } else if (query) {
+          let ids = null;
+          let queryKeys = Object.keys(query);
+          if (queryKeys.indexOf('_id') >= 0) {
+            if (typeof query['_id'] == 'string') {
+              ids = [query['_id']]
+            } else if (typeof query['_id'] == 'object') {
+              if (Object.keys(query['_id']) == 1 && Array.isArray(query['_id']['$in'])) {
+                ids = query['_id']['$in'];
+              }
+            }
+
+            if (ids) {
+              let cachePossible = true;
+              for (var queryProp in query) {
+                if (
+                  queryProp != '_rperm' &&
+                  queryProp != '_id' &&
+                  typeof query[queryProp] != 'string' &&
+                  typeof query[queryProp] != 'number' &&
+                  typeof query[queryProp] != 'boolean'
+                ) {
+                  cachePossible = false;
+                }
+              }
+
+              if (cachePossible) {
+                return cacheController.getMany(ids.map((id) => { return 'ObjectCache:' + mongoCollection.collectionName + ':' + id; })).then((results) => {
+                  results.forEach((result) => {
+                    if (result) {
+                      if (Array.isArray(query['_id']['$in'])) {
+                        query['_id']['$in'].splice(query['_id']['$in'].indexOf(result['_id']), 1);
+                      } else {
+                        mongoNeeded = false;
+                      }
+
+                      let valid = true;
+                      for (var queryProp in query) {
+                        if (queryProp == '_rperm') {
+                          if (
+                            result._rperm &&
+                            result._rperm.length &&
+                            result._rperm.indexOf('*') < 0 &&
+                            result._rperm.filter((rperm) => { return query[queryProp].indexOf(rperm) >= 0; }).length <= 0
+                          ) {
+                            valid = false
+                          }
+                        } else if (queryProp != '_id') {
+                          if (query[queryProp] != result[queryProp]) {
+                            valid = false;
+                          }
+                        }
+                      }
+
+                      if (valid) {
+                        cacheResults.push(result);
+                      }
+                    }
+                  });
+
+                  if (Array.isArray(query['_id']['$in']) && query['_id']['$in'].length == 0) {
+                    mongoNeeded = false;
+                  }
+                });
+              }
+            }
+          }
+        }
+      }
+
+      return Promise.resolve();
     }
 
-    if (maxTimeMS) {
-      findOperation = findOperation.maxTimeMS(maxTimeMS);
+    function findFromMongo() {
+      if (mongoNeeded) {
+        let findOperation = mongoCollection
+          .find(query, { skip, limit, sort, readPreference })
+
+        if (keys) {
+          findOperation = findOperation.project(keys);
+        }
+
+        if (maxTimeMS) {
+          findOperation = findOperation.maxTimeMS(maxTimeMS);
+        }
+
+        return findOperation
+          .toArray()
+          .then((results) => {
+            if (results) {
+              mongoResults = results;
+
+              if (cachedCollections && cachedCollections[mongoCollection.collectionName]) {
+                let items = {};
+                results.forEach((result) => {
+                  items['ObjectCache:' + mongoCollection.collectionName + ':' + result.id] = result;
+                });
+                cacheController.putMany(items, cachedCollections[mongoCollection.collectionName].ttl);
+
+                if (!query || query == {}) {
+                  return cacheController.put('ClassCache:' + mongoCollection.collectionName, results, cachedCollections[mongoCollection.collectionName].ttl);
+                }
+              }
+            }
+          });
+      }
     }
 
-    return findOperation.toArray();
+    function merge() {
+      return cacheResults.concat(mongoResults);
+    }
+
+    return findFromCache()
+      .then(findFromMongo)
+      .then(merge);
   }
 
   count(query, { skip, limit, sort, readPreference, maxTimeMS } = {}) {

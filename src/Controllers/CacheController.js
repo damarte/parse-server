@@ -54,9 +54,25 @@ export class CacheController extends AdaptableController {
     return this.adapter.get(cacheKey).then(null, () => Promise.resolve(null));
   }
 
+  getMany(keys) {
+    let cacheKeys = keys.map((key) => {
+      return joinKeys(this.appId, key);
+    });
+    return this.adapter.getMany(cacheKeys).then(null, () => Promise.resolve(null));
+  }
+
   put(key, value, ttl) {
     let cacheKey = joinKeys(this.appId, key);
     return this.adapter.put(cacheKey, value, ttl);
+  }
+
+  putMany(items, ttl) {
+    cacheItems = {};
+    for (var key in items) {
+      let cacheKey = joinKeys(this.appId, key);
+      cacheItems[cacheKey] = items[key];
+    }
+    return this.adapter.putMany(items, ttl);
   }
 
   del(key) {

@@ -111,6 +111,7 @@ class ParseServer {
     databaseOptions,
     geoQueryOnSecondary,
     readOnSecondaryClasses,
+    cachedCollections,
     databaseAdapter,
     cloud,
     collectionPrefix = '',
@@ -149,10 +150,14 @@ class ParseServer {
     // Initialize the node client SDK automatically
     Parse.initialize(appId, javascriptKey || 'unused', masterKey);
     Parse.serverURL = serverURL;
-    if ((databaseOptions || (databaseURI && databaseURI != defaults.DefaultMongoURI) || collectionPrefix !== '' || geoQueryOnSecondary !== undefined || readOnSecondaryClasses !== undefined) && databaseAdapter) {
+
+    const cacheControllerAdapter = loadAdapter(cacheAdapter, InMemoryCacheAdapter, {appId: appId});
+    const cacheController = new CacheController(cacheControllerAdapter, appId);
+
+    if ((databaseOptions || (databaseURI && databaseURI != defaults.DefaultMongoURI) || collectionPrefix !== '' || geoQueryOnSecondary !== undefined || readOnSecondaryClasses !== undefined || cachedCollections !== undefined) && databaseAdapter) {
       throw 'You cannot specify both a databaseAdapter and a databaseURI/databaseOptions/collectionPrefix/geoQueryOnSecondary.';
     } else if (!databaseAdapter) {
-      databaseAdapter = this.getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions, geoQueryOnSecondary, readOnSecondaryClasses)
+      databaseAdapter = this.getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions, geoQueryOnSecondary, readOnSecondaryClasses, cachedCollections, cacheController)
     } else {
       databaseAdapter = loadAdapter(databaseAdapter)
     }
@@ -178,9 +183,6 @@ class ParseServer {
 
     const emailControllerAdapter = loadAdapter(emailAdapter);
     const userController = new UserController(emailControllerAdapter, appId, { verifyUserEmails });
-
-    const cacheControllerAdapter = loadAdapter(cacheAdapter, InMemoryCacheAdapter, {appId: appId});
-    const cacheController = new CacheController(cacheControllerAdapter, appId);
 
     const analyticsControllerAdapter = loadAdapter(analyticsAdapter, AnalyticsAdapter);
     const analyticsController = new AnalyticsController(analyticsControllerAdapter);
@@ -256,7 +258,7 @@ class ParseServer {
     }
   }
 
-  getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions, geoQueryOnSecondary, readOnSecondaryClasses) {
+  getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions, geoQueryOnSecondary, readOnSecondaryClasses, cachedCollections, cacheController) {
     let protocol;
     try{
       const parsedURI = url.parse(databaseURI);
@@ -276,6 +278,8 @@ class ParseServer {
           mongoOptions: databaseOptions,
           geoQueryOnSecondary,
           readOnSecondaryClasses,
+          cachedCollections,
+          cacheController,
         });
     }
   }
