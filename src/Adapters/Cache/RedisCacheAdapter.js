@@ -29,7 +29,7 @@ export class RedisCacheAdapter {
   }
 
   getMany(keys) {
-    debug('getMany', key);
+    debug('getMany', keys);
     this.p = this.p.then(() => {
       return new Promise((resolve, _) => {
         this.client
