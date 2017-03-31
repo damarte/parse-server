@@ -30,16 +30,16 @@ describe('Import routers', () => {
 
         expect(err).toBe(null);
 
-        // const query = new Parse.Query('TestObject');
-        // query.ascending('column1');
-        // query.find().then((results) => {
-        //   expect(results.length).toEqual(2);
-        //   expect(results[0].get('column1')).toEqual('row1Column1');
-        //   expect(results[0].get('column2')).toEqual('row1Column2');
-        //   expect(results[1].get('column1')).toEqual('row2Column1');
-        //   expect(results[1].get('column2')).toEqual('row2Column2');
-        done();
-        // });
+        const query = new Parse.Query('TestObject');
+        query.ascending('column1');
+        query.find({}).then((results) => {
+          expect(results.length).toEqual(2);
+          expect(results[0].get('column1')).toEqual('row1Column1');
+          expect(results[0].get('column2')).toEqual('row1Column2');
+          expect(results[1].get('column1')).toEqual('row2Column1');
+          expect(results[1].get('column2')).toEqual('row2Column2');
+          done();
+        });
       }
     );
   });

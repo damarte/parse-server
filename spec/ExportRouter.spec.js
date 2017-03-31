@@ -37,7 +37,7 @@ describe('Export router', () => {
       }
     })
     .then(() => {
-      return createRecords(3000);
+      return createRecords(20);
     })
     .then(() => {
       request.put(
@@ -71,10 +71,10 @@ describe('Export router', () => {
         }
       );
     }
-    );
+    ).catch(fail);
   });
 
-  it_exclude_dbs(['postgres'])('send success export mail', (done) => {
+  it_exclude_dbs(['postgres'],30000)('send success export mail', (done) => {
 
     let results = [];
 
@@ -104,10 +104,11 @@ describe('Export router', () => {
       }
     }
     reconfigureServer({
-      emailAdapter: emailAdapter
+      emailAdapter: emailAdapter,
+      publicServerURL: "http://localhost:8378/1"
     })
     .then(() => {
-      return createRecords(2176);
+      return createRecords(21);
     })
     .then(() => {
       request.get(
@@ -135,5 +136,5 @@ describe('Export router', () => {
         }
       );
     });
-  });
+  }, 30000);
 });

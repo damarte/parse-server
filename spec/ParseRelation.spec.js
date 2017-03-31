@@ -6,7 +6,7 @@ var ChildObject = Parse.Object.extend({className: "ChildObject"});
 var ParentObject = Parse.Object.extend({className: "ParentObject"});
 
 describe('Parse.Relation testing', () => {
-  it("simple add and remove relation", (done) => {
+  it_exclude_dbs("simple add and remove relation", (done) => {
     var child = new ChildObject();
     child.set("x", 2);
     var parent = new ParentObject();
@@ -41,7 +41,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it("query relation without schema", (done) => {
+  it_exclude_dbs("query relation without schema", (done) => {
     var ChildObject = Parse.Object.extend("ChildObject");
     var childObjects = [];
     for (var i = 0; i < 10; i++) {
@@ -75,7 +75,7 @@ describe('Parse.Relation testing', () => {
     }));
   });
 
-  it("relations are constructed right from query", (done) => {
+  it_exclude_dbs("relations are constructed right from query", (done) => {
 
     var ChildObject = Parse.Object.extend("ChildObject");
     var childObjects = [];
@@ -121,8 +121,8 @@ describe('Parse.Relation testing', () => {
 
   });
 
-  it("compound add and remove relation", (done) => {
-    var ChildObject = Parse.Object.extend("ChildObject");
+  it_exclude_dbs("compound add and remove relation", (done) => {
+    var ChildObject = Parse.Object.extend("ChildObject2");
     var childObjects = [];
     for (var i = 0; i < 10; i++) {
       childObjects.push(new ChildObject({x: i}));
@@ -132,7 +132,7 @@ describe('Parse.Relation testing', () => {
     var relation;
 
     Parse.Object.saveAll(childObjects).then(function() {
-      var ParentObject = Parse.Object.extend('ParentObject');
+      var ParentObject = Parse.Object.extend('ParentObject2');
       parent = new ParentObject();
       parent.set('x', 4);
       relation = parent.relation('child');
@@ -202,7 +202,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it("queries on relation fields", (done) => {
+  it_exclude_dbs("queries on relation fields", (done) => {
     var ChildObject = Parse.Object.extend("ChildObject");
     var childObjects = [];
     for (var i = 0; i < 10; i++) {
@@ -248,7 +248,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it("queries on relation fields with multiple containedIn (regression test for #1271)", (done) => {
+  it_exclude_dbs("queries on relation fields with multiple containedIn (regression test for #1271)", (done) => {
     const ChildObject = Parse.Object.extend("ChildObject");
     const childObjects = [];
     for (let i = 0; i < 10; i++) {
@@ -337,7 +337,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it("query on pointer and relation fields with equal bis", (done) => {
+  it_exclude_dbs("query on pointer and relation fields with equal bis", (done) => {
     var ChildObject = Parse.Object.extend("ChildObject");
     var childObjects = [];
     for (var i = 0; i < 10; i++) {
@@ -422,7 +422,7 @@ describe('Parse.Relation testing', () => {
   });
 
 
-  it("Get query on relation using un-fetched parent object", (done) => {
+  it_exclude_dbs("Get query on relation using un-fetched parent object", (done) => {
     // Setup data model
     var Wheel = Parse.Object.extend('Wheel');
     var Car = Parse.Object.extend('Car');
@@ -455,7 +455,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it("Find query on relation using un-fetched parent object", (done) => {
+  it_exclude_dbs("Find query on relation using un-fetched parent object", (done) => {
     // Setup data model
     var Wheel = Parse.Object.extend('Wheel');
     var Car = Parse.Object.extend('Car');
@@ -489,7 +489,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it('Find objects with a related object using equalTo', (done) => {
+  it_exclude_dbs('Find objects with a related object using equalTo', (done) => {
     // Setup the objects
     var Card = Parse.Object.extend('Card');
     var House = Parse.Object.extend('House');
@@ -509,25 +509,25 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it('should properly get related objects with unfetched queries', (done) => {
+  it_exclude_dbs('should properly get related objects with unfetched queries', (done) => {
     const objects = [];
     const owners = [];
     const allObjects = [];
     // Build 10 Objects and 10 owners
     while (objects.length != 10) {
-      const object = new Parse.Object('AnObject');
+      const object = new Parse.Object('AnObject1');
       object.set({
         index: objects.length,
         even: objects.length % 2 == 0
       });
       objects.push(object);
-      const owner = new Parse.Object('AnOwner');
+      const owner = new Parse.Object('AnOwner1');
       owners.push(owner);
       allObjects.push(object);
       allObjects.push(owner);
     }
 
-    const anotherOwner = new Parse.Object('AnotherOwner');
+    const anotherOwner = new Parse.Object('AnotherOwner1');
 
     return Parse.Object.saveAll(allObjects.concat([anotherOwner])).then(() => {
       // put all the AnObject into the anotherOwner relationKey
@@ -539,13 +539,13 @@ describe('Parse.Relation testing', () => {
       return Parse.Object.saveAll(owners.concat([anotherOwner]));
     }).then(() => {
       // Query on the relation of another owner
-      const object = new Parse.Object('AnotherOwner');
+      const object = new Parse.Object('AnotherOwner1');
       object.id = anotherOwner.id;
       const relationQuery = object.relation('relationKey').query();
       // Just get the even ones
       relationQuery.equalTo('even', true);
       // Make the query on anOwner
-      const query = new Parse.Query('AnOwner');
+      const query = new Parse.Query('AnOwner1');
       // where key match the relation query.
       query.matchesQuery('key', relationQuery);
       query.include('key');
@@ -558,13 +558,13 @@ describe('Parse.Relation testing', () => {
       return Promise.resolve();
     }).then(() => {
       // Query on the relation of another owner
-      const object = new Parse.Object('AnotherOwner');
+      const object = new Parse.Object('AnotherOwner1');
       object.id = anotherOwner.id;
       const relationQuery = object.relation('relationKey').query();
       // Just get the even ones
       relationQuery.equalTo('even', true);
       // Make the query on anOwner
-      const query = new Parse.Query('AnOwner');
+      const query = new Parse.Query('AnOwner1');
       // where key match the relation query.
       query.doesNotMatchQuery('key', relationQuery);
       query.include('key');
@@ -581,7 +581,7 @@ describe('Parse.Relation testing', () => {
     })
   });
 
-  it("select query", function(done) {
+  it_exclude_dbs("select query", function(done) {
     var RestaurantObject = Parse.Object.extend("Restaurant");
     var PersonObject = Parse.Object.extend("Person");
     var OwnerObject = Parse.Object.extend('Owner');
@@ -622,7 +622,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it("dontSelect query", function(done) {
+  it_exclude_dbs("dontSelect query", function(done) {
     var RestaurantObject = Parse.Object.extend("Restaurant");
     var PersonObject = Parse.Object.extend("Person");
     var OwnerObject = Parse.Object.extend('Owner');
@@ -665,7 +665,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it('relations are not bidirectional (regression test for #871)', done => {
+  it_exclude_dbs('relations are not bidirectional (regression test for #871)', done => {
     const PersonObject = Parse.Object.extend("Person");
     const p1 = new PersonObject();
     const p2 = new PersonObject();
@@ -692,7 +692,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it('can query roles in Cloud Code (regession test #1489)', done => {
+  it_exclude_dbs('can query roles in Cloud Code (regession test #1489)', done => {
     Parse.Cloud.define('isAdmin', (request, response) => {
       const query = new Parse.Query(Parse.Role);
       query.equalTo('name', 'admin');
@@ -747,7 +747,7 @@ describe('Parse.Relation testing', () => {
     });
   });
 
-  it('can be saved without error', done => {
+  it_exclude_dbs('can be saved without error', done => {
     const obj1 = new Parse.Object('PPAP');
     obj1.save()
     .then(() => {

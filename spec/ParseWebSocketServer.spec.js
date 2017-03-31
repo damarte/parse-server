@@ -12,7 +12,7 @@ describe('ParseWebSocketServer', function() {
     done();
   });
 
-  it('can handle connect event when ws is open', function(done) {
+  it_exclude_dbs('can handle connect event when ws is open', function(done) {
     var onConnectCallback = jasmine.createSpy('onConnectCallback');
     var http = require('http');
     var server = http.createServer();
@@ -31,7 +31,7 @@ describe('ParseWebSocketServer', function() {
       expect(ws.ping).toHaveBeenCalled();
       server.close();
       done();
-    }, 10)
+    }, 100)
   });
 
   afterEach(function(){
