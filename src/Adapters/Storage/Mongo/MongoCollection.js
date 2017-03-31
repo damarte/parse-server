@@ -150,7 +150,7 @@ export default class MongoCollection {
               if (cachedCollections && cachedCollections[mongoCollection.collectionName]) {
                 let items = {};
                 results.forEach((result) => {
-                  items['ObjectCache:' + mongoCollection.collectionName + ':' + result.id] = result;
+                  items['ObjectCache:' + mongoCollection.collectionName + ':' + result['_id']] = result;
                 });
                 cacheController.putMany(items, cachedCollections[mongoCollection.collectionName].ttl);
 
