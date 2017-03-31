@@ -48,7 +48,7 @@ export default class MongoCollection {
 
     function findFromCache() {
       if (cachedCollections && cachedCollections[mongoCollection.collectionName]) {
-        if (!query || query == {}) {
+        if (!query || Object.keys(query).length == 0) {
           return cacheController.get('ClassCache:' + mongoCollection.collectionName).then((results) => {
             if (results) {
               cacheResults = results;
@@ -62,7 +62,7 @@ export default class MongoCollection {
             if (typeof query['_id'] == 'string') {
               ids = [query['_id']]
             } else if (typeof query['_id'] == 'object') {
-              if (Object.keys(query['_id']) == 1 && Array.isArray(query['_id']['$in'])) {
+              if (Object.keys(query['_id']).length == 1 && Array.isArray(query['_id']['$in'])) {
                 ids = query['_id']['$in'];
               }
             }
@@ -154,7 +154,7 @@ export default class MongoCollection {
                 });
                 cacheController.putMany(items, cachedCollections[mongoCollection.collectionName].ttl);
 
-                if (!query || query == {}) {
+                if (!query || Object.keys(query).length == 0) {
                   cacheController.put('ClassCache:' + mongoCollection.collectionName, results, cachedCollections[mongoCollection.collectionName].ttl);
                 }
               }
