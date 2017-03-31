@@ -47,7 +47,7 @@ export class RedisCacheAdapter {
   }
 
   put(key, value, ttl) {
-    value = JSON.stringify(value);
+    var value = JSON.stringify(value);
     debug('put', key, value, ttl);
     this.p = this.p.then(() => {
       return new Promise((resolve, _) => {
@@ -60,8 +60,8 @@ export class RedisCacheAdapter {
   }
 
   putMany(items, ttl) {
-    values = {};
-    command = [];
+    var values = {};
+    var command = [];
     for (var key in items) {
       values[key] = JSON.stringify(items[key]);
       command.push([
