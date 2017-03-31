@@ -47,6 +47,9 @@ export class RedisCacheAdapter {
   }
 
   put(key, value, ttl) {
+    if (value == undefined || value == 'undefined') {
+      return del(key);
+    }
     var value = JSON.stringify(value);
     debug('put', key, value, ttl);
     this.p = this.p.then(() => {
