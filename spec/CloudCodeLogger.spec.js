@@ -185,7 +185,7 @@ describe("Cloud Code Logger", () => {
             });
   });
 
-  it('should log cloud function failure', done => {
+  it_exclude_dbs('should log cloud function failure', done => {
     const logController = new LoggerController(new WinstonLoggerAdapter());
 
     Parse.Cloud.define('aFunction', (req, res) => {

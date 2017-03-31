@@ -131,7 +131,7 @@ describe('PushController', () => {
     done();
   });
 
-  it('properly increment badges', (done) => {
+  it_exclude_dbs('properly increment badges', (done) => {
     var pushAdapter = {
       send: function(body, installations) {
         var badge = body.data.badge;

@@ -311,7 +311,7 @@ describe('miscellaneous', function() {
     });
   });
 
-  it('query without limit get default 100 records', function(done) {
+  it_exclude_dbs('query without limit get default 100 records', function(done) {
     var objects = [];
     for (var i = 0; i < 150; i++) {
       objects.push(new TestObject({name: 'name' + i}));
