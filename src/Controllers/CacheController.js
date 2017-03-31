@@ -67,12 +67,12 @@ export class CacheController extends AdaptableController {
   }
 
   putMany(items, ttl) {
-    cacheItems = {};
+    var cacheItems = {};
     for (var key in items) {
       let cacheKey = joinKeys(this.appId, key);
       cacheItems[cacheKey] = items[key];
     }
-    return this.adapter.putMany(items, ttl);
+    return this.adapter.putMany(cacheItems, ttl);
   }
 
   del(key) {
