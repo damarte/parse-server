@@ -155,7 +155,7 @@ export default class MongoCollection {
                 cacheController.putMany(items, cachedCollections[mongoCollection.collectionName].ttl);
 
                 if (!query || query == {}) {
-                  return cacheController.put('ClassCache:' + mongoCollection.collectionName, results, cachedCollections[mongoCollection.collectionName].ttl);
+                  cacheController.put('ClassCache:' + mongoCollection.collectionName, results, cachedCollections[mongoCollection.collectionName].ttl);
                 }
               }
             }
