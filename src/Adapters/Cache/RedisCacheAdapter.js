@@ -54,9 +54,15 @@ export class RedisCacheAdapter {
     debug('put', key, value, ttl);
     this.p = this.p.then(() => {
       return new Promise((resolve, _) => {
-        this.client.set(key, value, 'px', ttl, function(err, res) {
-          resolve();
-        });
+        if (ttl) {
+          this.client.set(key, value, 'px', ttl, function(err, res) {
+            resolve();
+          });
+        } else {
+          this.client.set(key, value, function(err, res) {
+            resolve();
+          });
+        }
       });
     });
     return this.p;
