@@ -3,12 +3,13 @@ import * as middlewares from '../middlewares';
 import multer           from 'multer';
 import rest             from '../rest';
 import bluebird         from 'bluebird';
+import Parse            from 'parse/node';
 
 function handleImportRelation(req, res) {
   let targetClass;
-  
+
   function getOneSchema() {
-    let className = req.params.className;
+    const className = req.params.className;
     return req.config.database.loadSchema({clearCache: true})
       .then(schemaController => schemaController.getOneSchema(className))
       .catch(error => {
@@ -24,20 +25,20 @@ function handleImportRelation(req, res) {
 
   function importRestObject(restObject) {
     return rest.update(req.config, req.auth, req.params.className, restObject.owningId, {
-        [req.params.relationName]: {
-          "__op": "AddRelation",
-          "objects": [{"__type": "Pointer", "className": targetClass, "objectId": restObject.relatedId}]
-        }
-      }, req.info.clientSDK)
-      .catch(function (error) {
-        if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
-          return Promise.reject(new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found'));
-        } else {
-          return Promise.reject(error);
-        }
-      });
+      [req.params.relationName]: {
+        "__op": "AddRelation",
+        "objects": [{"__type": "Pointer", "className": targetClass, "objectId": restObject.relatedId}]
+      }
+    }, req.info.clientSDK)
+    .catch(function (error) {
+      if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
+        return Promise.reject(new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found'));
+      } else {
+        return Promise.reject(error);
+      }
+    });
   }
-  
+
   return getOneSchema().then((response) => {
     if (!response.fields.hasOwnProperty(req.params.relationName)) {
       res.status(400);
@@ -75,7 +76,7 @@ function handleImportRelation(req, res) {
     }
 
     if (req.body.feedbackEmail) {
-      let emailControllerAdapter = req.config.emailControllerAdapter;
+      const emailControllerAdapter = req.config.emailControllerAdapter;
       if (!emailControllerAdapter) {
         res.status(400);
         res.json({ response: 'You have to setup a Mail Adapter.' });
@@ -117,8 +118,8 @@ function handleImportRelation(req, res) {
 }
 
 export function getRouter() {
-  let upload = multer();
-  let router = express.Router();
+  const upload = multer();
+  const router = express.Router();
   router.post(
     '/import_relation_data/:className/:relationName',
     upload.single('importFile'),

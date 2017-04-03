@@ -39,7 +39,7 @@ describe('Parse.GeoPoint testing', () => {
     });
   });
 
-  it('geo line', (done) => {
+  it_exclude_dbs('geo line', (done) => {
     var line = [];
     for (var i = 0; i < 10; ++i) {
       var obj = new TestObject();

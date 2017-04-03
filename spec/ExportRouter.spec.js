@@ -66,12 +66,11 @@ describe('Export router', () => {
               if (progress.length) {
                 expect(progress[0].id).toBe('ExportTest');
               }
-
             });
         }
       );
     }
-    );
+    ).catch(fail);
   });
 
   it_exclude_dbs(['postgres'])('send success export mail', (done) => {
@@ -104,7 +103,8 @@ describe('Export router', () => {
       }
     }
     reconfigureServer({
-      emailAdapter: emailAdapter
+      emailAdapter: emailAdapter,
+      publicServerURL: "http://localhost:8378/1"
     })
     .then(() => {
       return createRecords(2176);
