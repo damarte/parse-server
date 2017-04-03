@@ -37,7 +37,7 @@ describe('Export router', () => {
       }
     })
     .then(() => {
-      return createRecords(20);
+      return createRecords(3000);
     })
     .then(() => {
       request.put(
@@ -66,7 +66,6 @@ describe('Export router', () => {
               if (progress.length) {
                 expect(progress[0].id).toBe('ExportTest');
               }
-              done();
             });
         }
       );
@@ -74,7 +73,7 @@ describe('Export router', () => {
     ).catch(fail);
   });
 
-  it_exclude_dbs(['postgres'],30000)('send success export mail', (done) => {
+  it_exclude_dbs(['postgres'])('send success export mail', (done) => {
 
     let results = [];
 
@@ -108,7 +107,7 @@ describe('Export router', () => {
       publicServerURL: "http://localhost:8378/1"
     })
     .then(() => {
-      return createRecords(21);
+      return createRecords(2176);
     })
     .then(() => {
       request.get(
@@ -136,5 +135,5 @@ describe('Export router', () => {
         }
       );
     });
-  }, 30000);
+  });
 });
