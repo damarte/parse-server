@@ -10,7 +10,7 @@ describe('RedisCacheAdapter', function() {
     })
   }
 
-  it('should get/set/clear', (done) => {
+  it_exclude_dbs('should get/set/clear', (done) => {
     var cache = new RedisCacheAdapter({
       ttl: NaN
     });
@@ -24,7 +24,7 @@ describe('RedisCacheAdapter', function() {
       .then(done);
   });
 
-  it('should expire after ttl', (done) => {
+  it_exclude_dbs('should expire after ttl', (done) => {
     var cache = new RedisCacheAdapter(null, 1);
 
     cache.put(KEY, VALUE)
@@ -36,7 +36,7 @@ describe('RedisCacheAdapter', function() {
       .then(done);
   });
 
-  it('should find un-expired records', (done) => {
+  it_exclude_dbs('should find un-expired records', (done) => {
     var cache = new RedisCacheAdapter(null, 5);
 
     cache.put(KEY, VALUE)

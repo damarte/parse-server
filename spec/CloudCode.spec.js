@@ -4,7 +4,7 @@ const rp = require('request-promise');
 const InMemoryCacheAdapter = require('../src/Adapters/Cache/InMemoryCacheAdapter').InMemoryCacheAdapter;
 
 describe('Cloud Code', () => {
-  it('can load absolute cloud code file', done => {
+  it_exclude_dbs('can load absolute cloud code file', done => {
     reconfigureServer({ cloud: __dirname + '/cloud/cloudCodeRelativeFile.js' })
     .then(() => {
       Parse.Cloud.run('cloudCodeInFile', {}, result => {
@@ -14,7 +14,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('can load relative cloud code file', done => {
+  it_exclude_dbs('can load relative cloud code file', done => {
     reconfigureServer({ cloud: './spec/cloud/cloudCodeAbsoluteFile.js' })
     .then(() => {
       Parse.Cloud.run('cloudCodeInFile', {}, result => {
@@ -24,7 +24,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('can create functions', done => {
+  it_exclude_dbs('can create functions', done => {
     Parse.Cloud.define('hello', (req, res) => {
       res.success('Hello world!');
     });
@@ -35,7 +35,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('is cleared cleared after the previous test', done => {
+  it_exclude_dbs('is cleared cleared after the previous test', done => {
     Parse.Cloud.run('hello', {})
     .catch(error => {
       expect(error.code).toEqual(141);
@@ -43,7 +43,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('basic beforeSave rejection', function(done) {
+  it_exclude_dbs('basic beforeSave rejection', function(done) {
     Parse.Cloud.beforeSave('BeforeSaveFail', function(req, res) {
       res.error('You shall not pass!');
     });
@@ -58,7 +58,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('returns an error', (done) => {
+  it_exclude_dbs('returns an error', (done) => {
     Parse.Cloud.define('cloudCodeWithError', (req, res) => {
       /* eslint-disable no-undef */
       foo.bar();
@@ -75,7 +75,7 @@ describe('Cloud Code', () => {
         });
   });
 
-  it('beforeSave rejection with custom error code', function(done) {
+  it_exclude_dbs('beforeSave rejection with custom error code', function(done) {
     Parse.Cloud.beforeSave('BeforeSaveFailWithErrorCode', function (req, res) {
       res.error(999, 'Nope');
     });
@@ -92,7 +92,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('basic beforeSave rejection via promise', function(done) {
+  it_exclude_dbs('basic beforeSave rejection via promise', function(done) {
     Parse.Cloud.beforeSave('BeforeSaveFailWithPromise', function (req, res) {
       var query = new Parse.Query('Yolo');
       query.find().then(() => {
@@ -114,7 +114,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('test beforeSave changed object success', function(done) {
+  it_exclude_dbs('test beforeSave changed object success', function(done) {
     Parse.Cloud.beforeSave('BeforeSaveChanged', function(req, res) {
       req.object.set('foo', 'baz');
       res.success();
@@ -137,7 +137,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test beforeSave returns value on create and update', (done) => {
+  it_exclude_dbs('test beforeSave returns value on create and update', (done) => {
     Parse.Cloud.beforeSave('BeforeSaveChanged', function(req, res) {
       req.object.set('foo', 'baz');
       res.success();
@@ -155,7 +155,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('test afterSave ran and created an object', function(done) {
+  it_exclude_dbs('test afterSave ran and created an object', function(done) {
     Parse.Cloud.afterSave('AfterSaveTest', function(req) {
       var obj = new Parse.Object('AfterSaveProof');
       obj.set('proof', req.object.id);
@@ -178,7 +178,7 @@ describe('Cloud Code', () => {
     }, 500);
   });
 
-  it('test afterSave ran on created object and returned a promise', function(done) {
+  it_exclude_dbs('test afterSave ran on created object and returned a promise', function(done) {
     Parse.Cloud.afterSave('AfterSaveTest2', function(req) {
       const obj = req.object;
       if(!obj.existed())
@@ -245,7 +245,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test afterSave rejecting promise', function(done) {
+  it_exclude_dbs('test afterSave rejecting promise', function(done) {
     Parse.Cloud.afterSave('AfterSaveTest2', function() {
       const promise = new Parse.Promise();
       setTimeout(function(){
@@ -264,7 +264,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('test afterDelete returning promise, object is deleted when destroy resolves', function(done) {
+  it_exclude_dbs('test afterDelete returning promise, object is deleted when destroy resolves', function(done) {
     Parse.Cloud.afterDelete('AfterDeleteTest2', function(req) {
       const promise = new Parse.Promise();
 
@@ -300,7 +300,7 @@ describe('Cloud Code', () => {
     }, errorHandler);
   });
 
-  it('test afterDelete ignoring promise, object is not yet deleted', function(done) {
+  it_exclude_dbs('test afterDelete ignoring promise, object is not yet deleted', function(done) {
     Parse.Cloud.afterDelete('AfterDeleteTest2', function(req) {
       const promise = new Parse.Promise();
 
@@ -335,7 +335,7 @@ describe('Cloud Code', () => {
     }, errorHandler);
   });
 
-  it('test beforeSave happens on update', function(done) {
+  it_exclude_dbs('test beforeSave happens on update', function(done) {
     Parse.Cloud.beforeSave('BeforeSaveChanged', function(req, res) {
       req.object.set('foo', 'baz');
       res.success();
@@ -358,7 +358,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test beforeDelete failure', function(done) {
+  it_exclude_dbs('test beforeDelete failure', function(done) {
     Parse.Cloud.beforeDelete('BeforeDeleteFail', function(req, res) {
       res.error('Nope');
     });
@@ -391,7 +391,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('basic beforeDelete rejection via promise', function(done) {
+  it_exclude_dbs('basic beforeDelete rejection via promise', function(done) {
     Parse.Cloud.beforeSave('BeforeDeleteFailWithPromise', function (req, res) {
       var query = new Parse.Query('Yolo');
       query.find().then(() => {
@@ -414,7 +414,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('test afterDelete ran and created an object', function(done) {
+  it_exclude_dbs('test afterDelete ran and created an object', function(done) {
     Parse.Cloud.afterDelete('AfterDeleteTest', function(req) {
       var obj = new Parse.Object('AfterDeleteProof');
       obj.set('proof', req.object.id);
@@ -439,7 +439,7 @@ describe('Cloud Code', () => {
     }, 500);
   });
 
-  it('test cloud function return types', function(done) {
+  it_exclude_dbs('test cloud function return types', function(done) {
     Parse.Cloud.define('foo', function(req, res) {
       res.success({
         object: {
@@ -484,7 +484,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test cloud function request params types', function(done) {
+  it_exclude_dbs('test cloud function request params types', function(done) {
     Parse.Cloud.define('params', function(req, res) {
       expect(req.params.date instanceof Date).toBe(true);
       expect(req.params.date.getTime()).toBe(1463907600000);
@@ -558,7 +558,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test cloud function should echo keys', function(done) {
+  it_exclude_dbs('test cloud function should echo keys', function(done) {
     Parse.Cloud.define('echoKeys', function(req, res){
       return res.success({
         applicationId: Parse.applicationId,
@@ -575,7 +575,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('should properly create an object in before save', done => {
+  it_exclude_dbs('should properly create an object in before save', done => {
     Parse.Cloud.beforeSave('BeforeSaveChanged', function(req, res) {
       req.object.set('foo', 'baz');
       res.success();
@@ -594,7 +594,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('dirtyKeys are set on update', done => {
+  it_exclude_dbs('dirtyKeys are set on update', done => {
     let triggerTime = 0;
     // Register a mock beforeSave hook
     Parse.Cloud.beforeSave('GameScore', (req, res) => {
@@ -633,7 +633,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test beforeSave unchanged success', function(done) {
+  it_exclude_dbs('test beforeSave unchanged success', function(done) {
     Parse.Cloud.beforeSave('BeforeSaveUnchanged', function(req, res) {
       res.success();
     });
@@ -648,7 +648,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test beforeDelete success', function(done) {
+  it_exclude_dbs('test beforeDelete success', function(done) {
     Parse.Cloud.beforeDelete('BeforeDeleteTest', function(req, res) {
       res.success();
     });
@@ -666,7 +666,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('test save triggers get user', function(done) {
+  it_exclude_dbs('test save triggers get user', function(done) {
     Parse.Cloud.beforeSave('SaveTriggerUser', function(req, res) {
       if (req.user && req.user.id) {
         res.success();
@@ -698,7 +698,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('beforeSave change propagates through the save response', (done) => {
+  it_exclude_dbs('beforeSave change propagates through the save response', (done) => {
     Parse.Cloud.beforeSave('ChangingObject', function(request, response) {
       request.object.set('foo', 'baz');
       response.success();
@@ -713,7 +713,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('beforeSave change propagates through the afterSave #1931', (done) => {
+  it_exclude_dbs('beforeSave change propagates through the afterSave #1931', (done) => {
     Parse.Cloud.beforeSave('ChangingObject', function(request, response) {
       request.object.unset('file');
       request.object.unset('date');
@@ -738,7 +738,7 @@ describe('Cloud Code', () => {
     })
   });
 
-  it('test cloud function parameter validation success', (done) => {
+  it_exclude_dbs('test cloud function parameter validation success', (done) => {
     // Register a function with validation
     Parse.Cloud.define('functionWithParameterValidation', (req, res) => {
       res.success('works');
@@ -754,7 +754,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('doesnt receive stale user in cloud code functions after user has been updated with master key (regression test for #1836)', done => {
+  it_exclude_dbs('doesnt receive stale user in cloud code functions after user has been updated with master key (regression test for #1836)', done => {
     Parse.Cloud.define('testQuery', function(request, response) {
       response.success(request.user.get('data'));
     });
@@ -777,7 +777,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('clears out the user cache for all sessions when the user is changed', done => {
+  it_exclude_dbs('clears out the user cache for all sessions when the user is changed', done => {
     let session1;
     let session2;
     let user;
@@ -850,7 +850,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('trivial beforeSave should not affect fetched pointers (regression test for #1238)', done => {
+  it_exclude_dbs('trivial beforeSave should not affect fetched pointers (regression test for #1238)', done => {
     Parse.Cloud.beforeSave('BeforeSaveUnchanged', (req, res) => {
       res.success();
     });
@@ -882,7 +882,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('beforeSave should not affect fetched pointers', done => {
+  it_exclude_dbs('beforeSave should not affect fetched pointers', done => {
     Parse.Cloud.beforeSave('BeforeSaveUnchanged', (req, res) => {
       res.success();
     });
@@ -1012,7 +1012,7 @@ describe('Cloud Code', () => {
     });
   });
 
-  it('should not include relation op (regression test for #1606)', done => {
+  it_exclude_dbs('should not include relation op (regression test for #1606)', done => {
     var TestObject = Parse.Object.extend('TestObject');
     var BeforeSaveObject = Parse.Object.extend('BeforeSaveChanged');
     let testObj;
@@ -1038,7 +1038,7 @@ describe('Cloud Code', () => {
   });
 
   describe('cloud jobs', () => {
-    it('should define a job', (done) => {
+    it_exclude_dbs('should define a job', (done) => {
       expect(() => {
         Parse.Cloud.job('myJob', (req, res) => {
           res.success();
@@ -1059,7 +1059,7 @@ describe('Cloud Code', () => {
       });
     });
 
-    it('should not run without master key', (done) => {
+    it_exclude_dbs('should not run without master key', (done) => {
       expect(() => {
         Parse.Cloud.job('myJob', (req, res) => {
           res.success();
@@ -1081,7 +1081,7 @@ describe('Cloud Code', () => {
       });
     });
 
-    it('should run with master key', (done) => {
+    it_exclude_dbs('should run with master key', (done) => {
       expect(() => {
         Parse.Cloud.job('myJob', (req, res) => {
           expect(req.functionName).toBeUndefined();
@@ -1108,7 +1108,7 @@ describe('Cloud Code', () => {
       });
     });
 
-    it('should run with master key basic auth', (done) => {
+    it_exclude_dbs('should run with master key basic auth', (done) => {
       expect(() => {
         Parse.Cloud.job('myJob', (req, res) => {
           expect(req.functionName).toBeUndefined();
@@ -1131,7 +1131,7 @@ describe('Cloud Code', () => {
       });
     });
 
-    it('should set the message / success on the job', (done) => {
+    it_exclude_dbs('should set the message / success on the job', (done) => {
       Parse.Cloud.job('myJob', (req, res) => {
         res.message('hello');
         res.message().then(() => {
@@ -1166,7 +1166,7 @@ describe('Cloud Code', () => {
       });
     });
 
-    it('should set the failure on the job', (done) => {
+    it_exclude_dbs('should set the failure on the job', (done) => {
       Parse.Cloud.job('myJob', (req, res) => {
         res.error('Something went wrong').then(() => {
           return getJobStatus(req.jobId);
@@ -1201,7 +1201,7 @@ describe('Cloud Code', () => {
 });
 
 describe('beforeFind hooks', () => {
-  it('should add beforeFind trigger', (done) => {
+  it_exclude_dbs('should add beforeFind trigger', (done) => {
     Parse.Cloud.beforeFind('MyObject', (req) => {
       const q = req.query;
       expect(q instanceof Parse.Query).toBe(true);
@@ -1223,7 +1223,7 @@ describe('beforeFind hooks', () => {
     });
   });
 
-  it('should use modify', (done) => {
+  it_exclude_dbs('should use modify', (done) => {
     Parse.Cloud.beforeFind('MyObject', (req) => {
       const q = req.query;
       q.equalTo('forced', true);
@@ -1246,7 +1246,7 @@ describe('beforeFind hooks', () => {
     });
   });
 
-  it('should use the modified the query', (done) => {
+  it_exclude_dbs('should use the modified the query', (done) => {
     Parse.Cloud.beforeFind('MyObject', (req) => {
       const q = req.query;
       const otherQuery = new Parse.Query('MyObject');
@@ -1269,7 +1269,7 @@ describe('beforeFind hooks', () => {
     });
   });
 
-  it('should reject queries', (done) => {
+  it_exclude_dbs('should reject queries', (done) => {
     Parse.Cloud.beforeFind('MyObject', () => {
       return Promise.reject('Do not run that query');
     });
@@ -1285,7 +1285,7 @@ describe('beforeFind hooks', () => {
     });
   });
 
-  it('should handle empty where', (done) => {
+  it_exclude_dbs('should handle empty where', (done) => {
     Parse.Cloud.beforeFind('MyObject', (req) => {
       const otherQuery = new Parse.Query('MyObject');
       otherQuery.equalTo('some', true);
@@ -1308,7 +1308,7 @@ describe('beforeFind hooks', () => {
 });
 
 describe('afterFind hooks', () => {
-  it('should add afterFind trigger using get',(done) => {
+  it_exclude_dbs('should add afterFind trigger using get',(done) => {
     Parse.Cloud.afterFind('MyObject', (req, res) => {
       for(let i = 0 ; i < req.objects.length ; i++){
         req.objects[i].set("secretField","###");
@@ -1332,7 +1332,7 @@ describe('afterFind hooks', () => {
     });
   });
 
-  it('should add afterFind trigger using find',(done) => {
+  it_exclude_dbs('should add afterFind trigger using find',(done) => {
     Parse.Cloud.afterFind('MyObject', (req, res) => {
       for(let i = 0 ; i < req.objects.length ; i++){
         req.objects[i].set("secretField","###");
@@ -1357,7 +1357,7 @@ describe('afterFind hooks', () => {
     });
   });
 
-  it('should filter out results',(done) => {
+  it_exclude_dbs('should filter out results',(done) => {
     Parse.Cloud.afterFind('MyObject', (req, res) => {
       const filteredResults = [];
       for(let i = 0 ; i < req.objects.length ; i++){
@@ -1387,7 +1387,7 @@ describe('afterFind hooks', () => {
     });
   });
 
-  it('should handle failures',(done) => {
+  it_exclude_dbs('should handle failures',(done) => {
     Parse.Cloud.afterFind('MyObject', (req, res) => {
       res.error(Parse.Error.SCRIPT_FAILED, "It should fail");
     });
@@ -1407,7 +1407,7 @@ describe('afterFind hooks', () => {
     });
   });
 
-  it('should also work with promise',(done) => {
+  it_exclude_dbs('should also work with promise',(done) => {
     Parse.Cloud.afterFind('MyObject', (req) => {
       const promise = new Parse.Promise();
       setTimeout(function(){
@@ -1434,7 +1434,7 @@ describe('afterFind hooks', () => {
     });
   });
 
-  it('should alter select', (done) => {
+  it_exclude_dbs('should alter select', (done) => {
     Parse.Cloud.beforeFind('MyObject', (req) => {
       req.query.select('white');
       return req.query;
@@ -1455,7 +1455,7 @@ describe('afterFind hooks', () => {
       });
   });
 
-  it('should not alter select', (done) => {
+  it_exclude_dbs('should not alter select', (done) => {
     const obj0 = new Parse.Object('MyObject')
       .set('white', true)
       .set('black', true);
