@@ -253,7 +253,8 @@ RestQuery.prototype.replaceInQuery = function() {
   }
 
   const additionalOptions = {
-    redirectClassNameForKey: inQueryValue.redirectClassNameForKey
+    redirectClassNameForKey: inQueryValue.redirectClassNameForKey,
+    keys: 'objectId'
   };
 
   var subquery = new RestQuery(
