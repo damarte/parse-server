@@ -1,5 +1,6 @@
 import ClassesRouter from './ClassesRouter';
 import rest from '../rest';
+import * as middleware from '../middlewares';
 
 export class AudiencesRouter extends ClassesRouter {
   handleFind(req) {
@@ -22,8 +23,7 @@ export class AudiencesRouter extends ClassesRouter {
       options.include = String(body.include);
     }
 
-    return rest.find(req.config, req.auth,
-      '_Audience', body.where, options, req.info.clientSDK)
+    return rest.find(req.config, req.auth, '_Audience', body.where, options, req.info.clientSDK)
       .then((response) => {
 
         response.results.forEach((item) => {
@@ -37,13 +37,11 @@ export class AudiencesRouter extends ClassesRouter {
   handleGet(req) {
     req.params.className = '_Audience';
     return super.handleGet(req)
-    .then((data) => {
-      data.response.results.forEach((item) => {
-        item.query = JSON.parse(item.query);
-      });
+      .then((data) => {
+        data.response.query = JSON.parse(data.response.query);
 
-      return data;
-    });
+        return data;
+      });
   }
 
   handleCreate(req) {
@@ -62,11 +60,11 @@ export class AudiencesRouter extends ClassesRouter {
   }
 
   mountRoutes() {
-    this.route('GET','/push_audiences', req => { return this.handleFind(req); });
-    this.route('GET','/push_audiences/:objectId', req => { return this.handleGet(req); });
-    this.route('POST','/push_audiences', req => { return this.handleCreate(req); });
-    this.route('PUT','/push_audiences/:objectId', req => { return this.handleUpdate(req); });
-    this.route('DELETE','/push_audiences/:objectId', req => { return this.handleDelete(req); });
+    this.route('GET','/push_audiences', middleware.promiseEnforceMasterKeyAccess, req => { return this.handleFind(req); });
+    this.route('GET','/push_audiences/:objectId', middleware.promiseEnforceMasterKeyAccess, req => { return this.handleGet(req); });
+    this.route('POST','/push_audiences', middleware.promiseEnforceMasterKeyAccess, req => { return this.handleCreate(req); });
+    this.route('PUT','/push_audiences/:objectId', middleware.promiseEnforceMasterKeyAccess, req => { return this.handleUpdate(req); });
+    this.route('DELETE','/push_audiences/:objectId', middleware.promiseEnforceMasterKeyAccess, req => { return this.handleDelete(req); });
   }
 }
 

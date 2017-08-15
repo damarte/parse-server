@@ -8,7 +8,6 @@ import {
   nullParser
 } from '../utils/parsers';
 
-
 export default {
   "appId": {
     env: "PARSE_SERVER_APPLICATION_ID",
@@ -85,6 +84,11 @@ export default {
     env: "PARSE_SERVER_PUSH",
     help: "Configuration for push, as stringified JSON. See https://github.com/ParsePlatform/parse-server/wiki/Push",
     action: objectParser
+  },
+  "scheduledPush": {
+    env: "PARSE_SERVER_SCHEDULED_PUSH",
+    help: "Configuration for push scheduling. Defaults to false.",
+    action: booleanParser
   },
   "oauth": {
     env: "PARSE_SERVER_OAUTH_PROVIDERS",
@@ -225,6 +229,16 @@ export default {
     help: "Use a single schema cache shared across requests. Reduces number of queries made to _SCHEMA. Defaults to false, i.e. unique schema cache per request.",
     action: booleanParser
   },
+  "cacheTTL": {
+    env: "PARSE_SERVER_CACHE_TTL",
+    help: "Sets the TTL for the in memory cache (in ms), defaults to 5000 (5 seconds)",
+    action: numberParser("cacheTTL"),
+  },
+  "cacheMaxSize": {
+    env: "PARSE_SERVER_CACHE_MAX_SIZE",
+    help: "Sets the maximum size for the in memory cache, defaults to 10000",
+    action: numberParser("cacheMaxSize")
+  },
   "cluster": {
     env: "PARSE_SERVER_CLUSTER",
     help: "Run with cluster, optionally set the number of processes default to os.cpus().length",
@@ -256,5 +270,10 @@ export default {
   },
   "middleware": {
     help: "middleware for express server, can be string or function"
+  },
+  "objectIdSize": {
+    env: "PARSE_SERVER_OBJECT_ID_SIZE",
+    help: "Sets the number of characters in generated object id's, default 10",
+    action: numberParser("objectIdSize")
   }
 };
