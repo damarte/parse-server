@@ -27,7 +27,7 @@ describe('Export router', () => {
     return Parse.Object.saveAll(items);
   };
 
-  it_exclude_dbs(['postgres'])('should create export progress', (done) => {
+  it_exclude_dbs('should create export progress', (done) => {
 
     reconfigureServer({
       emailAdapter : {
@@ -73,7 +73,7 @@ describe('Export router', () => {
     ).catch(fail);
   });
 
-  it_exclude_dbs(['postgres'])('send success export mail', (done) => {
+  it_exclude_dbs('send success export mail', (done) => {
 
     let results = [];
 
