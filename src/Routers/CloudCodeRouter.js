@@ -28,11 +28,20 @@ export class CloudCodeRouter extends PromiseRouter {
   }
 
   static getJobs(req) {
-    return rest.find(req.config, req.auth, '_JobSchedule', {}, {}).then((scheduledJobs) => {
-      return {
-        response: scheduledJobs.results
-      }
-    });
+    const config = req.config;
+    const jobs = triggers.getJobs(config.applicationId) || {};
+    return Promise.resolve({
+      response: Object.keys(jobs).map((jobName) => {
+        return {
+          jobName,
+        }
+      })
+      // return rest.find(req.config, req.auth, '_JobSchedule', {}, {}).then((scheduledJobs) => {
+      //   return {
+      //     response: scheduledJobs.results
+      //   }
+      // });
+    })
   }
 
   static getJobsData(req) {
