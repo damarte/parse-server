@@ -36,41 +36,41 @@ describe('Export router', () => {
         }
       }
     })
-    .then(() => {
-      return createRecords(3000);
-    })
-    .then(() => {
-      request.put(
-        {
-          headers: headers,
-          url: 'http://localhost:8378/1/export_data',
-          body: JSON.stringify({
-            name: 'ExportTest',
-            feedbackEmail: 'my@email.com'
-          })
-        },
-        () => {
+      .then(() => {
+        return createRecords(3000);
+      })
+      .then(() => {
+        request.put(
+          {
+            headers: headers,
+            url: 'http://localhost:8378/1/export_data',
+            body: JSON.stringify({
+              name: 'ExportTest',
+              feedbackEmail: 'my@email.com'
+            })
+          },
+          () => {
 
-          request.get(
-            {
-              headers: headers,
-              url: 'http://localhost:8378/1/export_progress'
-            },
-            (err, response, body) => {
+            request.get(
+              {
+                headers: headers,
+                url: 'http://localhost:8378/1/export_progress'
+              },
+              (err, response, body) => {
 
-              const progress = JSON.parse(body);
+                const progress = JSON.parse(body);
 
-              expect(progress instanceof Array).toBe(true);
-              expect(progress.length).toBe(1);
+                expect(progress instanceof Array).toBe(true);
+                expect(progress.length).toBe(1);
 
-              if (progress.length) {
-                expect(progress[0].id).toBe('ExportTest');
-              }
-            });
-        }
-      );
-    }
-    ).catch(fail);
+                if (progress.length) {
+                  expect(progress[0].id).toBe('ExportTest');
+                }
+              });
+          }
+        );
+      }
+      ).catch(fail);
   });
 
   it_exclude_dbs(['postgres'])('send success export mail', (done) => {
@@ -106,34 +106,34 @@ describe('Export router', () => {
       emailAdapter: emailAdapter,
       publicServerURL: "http://localhost:8378/1"
     })
-    .then(() => {
-      return createRecords(2176);
-    })
-    .then(() => {
-      request.get(
-        {
-          headers: headers,
-          url: 'http://localhost:8378/1/classes/ExportTest',
-        },
-        (err, response, body) => {
-          results = JSON.parse(body);
+      .then(() => {
+        return createRecords(2176);
+      })
+      .then(() => {
+        request.get(
+          {
+            headers: headers,
+            url: 'http://localhost:8378/1/classes/ExportTest',
+          },
+          (err, response, body) => {
+            results = JSON.parse(body);
 
-          request.put(
-            {
-              headers: headers,
-              url: 'http://localhost:8378/1/export_data',
-              body: JSON.stringify({
-                name: 'ExportTest',
-                feedbackEmail: 'my@email.com'
-              })
-            },
-            (err, response, body) => {
-              expect(err).toBe(null);
-              expect(body).toEqual('"We are exporting your data. You will be notified by e-mail once it is completed."');
-            }
-          );
-        }
-      );
-    });
+            request.put(
+              {
+                headers: headers,
+                url: 'http://localhost:8378/1/export_data',
+                body: JSON.stringify({
+                  name: 'ExportTest',
+                  feedbackEmail: 'my@email.com'
+                })
+              },
+              (err, response, body) => {
+                expect(err).toBe(null);
+                expect(body).toEqual('"We are exporting your data. You will be notified by e-mail once it is completed."');
+              }
+            );
+          }
+        );
+      });
   });
 });

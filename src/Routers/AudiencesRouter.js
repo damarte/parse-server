@@ -42,7 +42,7 @@ export class AudiencesRouter extends ClassesRouter {
           data.response.results.forEach((item) => {
             item.query = JSON.parse(item.query);
           });
-		} else {
+        } else {
           data.response.query = JSON.parse(data.response.query);
         }
 

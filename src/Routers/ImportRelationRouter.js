@@ -24,19 +24,19 @@ function handleImportRelation(req, res) {
   }
 
   function importRestObject(restObject) {
-    return rest.update(req.config, req.auth, req.params.className, restObject.owningId, {
+    return rest.update(req.config, req.auth, req.params.className, {objectId: restObject.owningId}, {
       [req.params.relationName]: {
         "__op": "AddRelation",
         "objects": [{"__type": "Pointer", "className": targetClass, "objectId": restObject.relatedId}]
       }
     }, req.info.clientSDK)
-    .catch(function (error) {
-      if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
-        return Promise.reject(new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found'));
-      } else {
-        return Promise.reject(error);
-      }
-    });
+      .catch(function (error) {
+        if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
+          return Promise.reject(new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found'));
+        } else {
+          return Promise.reject(error);
+        }
+      });
   }
 
   return getOneSchema().then((response) => {

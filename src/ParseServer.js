@@ -108,7 +108,6 @@ class ParseServer {
     silent = defaults.silent,
     databaseURI = defaults.DefaultMongoURI,
     databaseOptions,
-    geoQueryOnSecondary,
     databaseAdapter,
     cloud,
     collectionPrefix = '',
