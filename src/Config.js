@@ -5,6 +5,7 @@
 import AppCache from './cache';
 import SchemaCache from './Controllers/SchemaCache';
 import DatabaseController from './Controllers/DatabaseController';
+import net from 'net';
 
 function removeTrailingSlash(str) {
   if (!str) {
@@ -26,6 +27,7 @@ export class Config {
     this.applicationId = applicationId;
     this.jsonLogs = cacheInfo.jsonLogs;
     this.masterKey = cacheInfo.masterKey;
+    this.masterKeyIps = cacheInfo.masterKeyIps;
     this.clientKey = cacheInfo.clientKey;
     this.javascriptKey = cacheInfo.javascriptKey;
     this.dotNetKey = cacheInfo.dotNetKey;
@@ -61,6 +63,7 @@ export class Config {
     this.pushControllerQueue = cacheInfo.pushControllerQueue;
     this.pushWorker = cacheInfo.pushWorker;
     this.hasPushSupport = cacheInfo.hasPushSupport;
+    this.hasPushScheduledSupport = cacheInfo.hasPushScheduledSupport;
     this.loggerController = cacheInfo.loggerController;
     this.userController = cacheInfo.userController;
     this.authDataManager = cacheInfo.authDataManager;
@@ -73,6 +76,7 @@ export class Config {
     this.generateSessionExpiresAt = this.generateSessionExpiresAt.bind(this);
     this.generateEmailVerifyTokenExpiresAt = this.generateEmailVerifyTokenExpiresAt.bind(this);
     this.revokeSessionOnPasswordReset = cacheInfo.revokeSessionOnPasswordReset;
+    this.objectIdSize = cacheInfo.objectIdSize;
   }
 
   static validate({
@@ -85,7 +89,8 @@ export class Config {
     sessionLength,
     emailVerifyTokenValidityDuration,
     accountLockout,
-    passwordPolicy
+    passwordPolicy,
+    masterKeyIps
   }) {
     const emailAdapter = userController.adapter;
     if (verifyUserEmails) {
@@ -107,6 +112,8 @@ export class Config {
     }
 
     this.validateSessionConfiguration(sessionLength, expireInactiveSessions);
+
+    this.validateMasterKeyIps(masterKeyIps);
   }
 
   static validateAccountLockoutPolicy(accountLockout) {
@@ -183,6 +190,14 @@ export class Config {
     }
   }
 
+  static validateMasterKeyIps(masterKeyIps) {
+    for (const ip of masterKeyIps) {
+      if(!net.isIP(ip)){
+        throw `Invalid ip in masterKeyIps: ${ip}`;
+      }
+    }
+  }
+
   get mount() {
     var mount = this._mount;
     if (this.publicServerURL) {
@@ -232,6 +247,18 @@ export class Config {
 
   get invalidLinkURL() {
     return this.customPages.invalidLink || `${this.publicServerURL}/apps/invalid_link.html`;
+  }
+
+  get invalidVerificationLinkURL() {
+    return this.customPages.invalidVerificationLink || `${this.publicServerURL}/apps/invalid_verification_link.html`;
+  }
+
+  get linkSendSuccessURL() {
+    return this.customPages.linkSendSuccess || `${this.publicServerURL}/apps/link_send_success.html`
+  }
+
+  get linkSendFailURL() {
+    return this.customPages.linkSendFail || `${this.publicServerURL}/apps/link_send_fail.html`
   }
 
   get verifyEmailSuccessURL() {
