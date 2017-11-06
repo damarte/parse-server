@@ -2,7 +2,7 @@ const Parse = require("parse/node");
 const request = require('request');
 
 describe('Import routers', () => {
-  it_exclude_dbs(['postgres'])('import objects from file with array', (done) => {
+  it('import objects from file with array', (done) => {
     const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
@@ -44,7 +44,7 @@ describe('Import routers', () => {
     );
   });
 
-  it_exclude_dbs(['postgres'])('import objects from file with results field', (done) => {
+  it('import objects from file with results field', (done) => {
     const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
@@ -84,7 +84,7 @@ describe('Import routers', () => {
     );
   });
 
-  it_exclude_dbs(['postgres'])('import objects with all data types', (done) => {
+  it('import objects with all data types', (done) => {
     const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
@@ -161,7 +161,7 @@ describe('Import routers', () => {
     );
   });
 
-  it_exclude_dbs(['postgres'])('import objects with object id', (done) => {
+  it('import objects with object id', (done) => {
     const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
@@ -209,7 +209,7 @@ describe('Import routers', () => {
     );
   });
 
-  it_exclude_dbs(['postgres'])('update objects with existing object id', (done) => {
+  it('update objects with existing object id', (done) => {
     const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
@@ -279,7 +279,7 @@ describe('Import routers', () => {
     );
   });
 
-  it_exclude_dbs(['postgres'])('send success import mail', (done) => {
+  it('send success import mail', (done) => {
     const emailAdapter = {
       sendMail: ({text, to, subject}) => {
         expect(text).toEqual('We have successfully imported your data to the class TestObject.');
@@ -332,7 +332,7 @@ describe('Import routers', () => {
     });
   });
 
-  it_exclude_dbs(['postgres'])('import relations object from file', (done) => {
+  it('import relations object from file', (done) => {
     const headers = {
       'Content-Type': 'multipart/form-data',
       'X-Parse-Application-Id': 'test',
@@ -389,7 +389,7 @@ describe('Import routers', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('send success import mail in the import relation', (done) => {
+  it('send success import mail in the import relation', (done) => {
     const object = new Parse.Object('TestObjectDad');
     const relatedObject = new Parse.Object('TestObjectChild');
     const ids = {};

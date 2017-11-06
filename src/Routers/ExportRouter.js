@@ -105,7 +105,7 @@ export class ExportRouter extends PromiseRouter {
 
     const databaseController = req.config.database;
 
-    const emailControllerAdapter = req.config.emailControllerAdapter;
+    const emailControllerAdapter = req.config.emailAdapter;
 
     if (!emailControllerAdapter) {
       return Promise.reject(new Error('You have to setup a Mail Adapter.'));

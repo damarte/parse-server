@@ -97,7 +97,7 @@ export class ImportRouter {
       }
 
       if (req.body.feedbackEmail) {
-        if (!req.config.emailControllerAdapter) {
+        if (!req.config.emailAdapter) {
           throw new Error('You have to setup a Mail Adapter.');
         }
       }
@@ -153,7 +153,7 @@ export class ImportRouter {
       .then((results) => {
 
         if (req.body.feedbackEmail) {
-          req.config.emailControllerAdapter.sendMail({
+          req.config.emailAdapter.sendMail({
             text: `We have successfully imported your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }.`,
             to: req.body.feedbackEmail,
             subject: 'Import completed'
@@ -164,7 +164,7 @@ export class ImportRouter {
       })
       .catch((error) => {
         if (req.body.feedbackEmail) {
-          req.config.emailControllerAdapter.sendMail({
+          req.config.emailAdapter.sendMail({
             text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${error}`,
             to: req.body.feedbackEmail,
             subject: 'Import failed'
@@ -175,7 +175,7 @@ export class ImportRouter {
 
       });
 
-    if (req.body.feedbackEmail && req.config.emailControllerAdapter) {
+    if (req.body.feedbackEmail && req.config.emailAdapter) {
       promise = Promise.resolve({ response: 'We are importing your data. You will be notified by e-mail once it is completed.' });
     }
 
