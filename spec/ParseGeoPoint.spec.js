@@ -68,8 +68,7 @@ describe('Parse.GeoPoint testing', () => {
     })
   });
 
-
-  it('geo point exception two fields', (done) => {
+  it('creating geo point exception two fields', (done) => {
     var point = new Parse.GeoPoint(20, 20);
     var obj = new TestObject();
     obj.set('locationOne', point);
@@ -82,7 +81,25 @@ describe('Parse.GeoPoint testing', () => {
     });
   });
 
-  it_exclude_dbs('geo line', (done) => {
+  // TODO: This should also have support in postgres, or higher level database agnostic support.
+  it_exclude_dbs(['postgres'])('updating geo point exception two fields', (done) => {
+    var point = new Parse.GeoPoint(20, 20);
+    var obj = new TestObject();
+    obj.set('locationOne', point);
+    obj.save(null, {
+      success: (obj) => {
+        obj.set('locationTwo', point);
+        obj.save().then(() => {
+          fail('expected error');
+        }, (err) => {
+          equal(err.code, Parse.Error.INCORRECT_TYPE);
+          done();
+        })
+      }
+    });
+  });
+
+  it('geo line', (done) => {
     var line = [];
     for (var i = 0; i < 10; ++i) {
       var obj = new TestObject();

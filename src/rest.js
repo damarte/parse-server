@@ -114,9 +114,9 @@ function del(config, auth, className, objectId) {
 }
 
 // Returns a promise for a {response, status, location} object.
-function create(config, auth, className, restObject, clientSDK, options) {
+function create(config, auth, className, restObject, clientSDK) {
   enforceRoleSecurity('create', className, auth);
-  var write = new RestWrite(config, auth, className, null, restObject, null, clientSDK, options);
+  var write = new RestWrite(config, auth, className, null, restObject, null, clientSDK);
   return write.execute();
 }
 
@@ -157,6 +157,12 @@ function enforceRoleSecurity(method, className, auth) {
   //all volatileClasses are masterKey only
   if(classesWithMasterOnlyAccess.indexOf(className) >= 0 && !auth.isMaster){
     const error = `Clients aren't allowed to perform the ${method} operation on the ${className} collection.`
+    throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
+  }
+
+  // readOnly masterKey is not allowed
+  if (auth.isReadOnly && (method === 'delete' || method === 'create' || method === 'update')) {
+    const error = `read-only masterKey isn't allowed to perform the ${method} operation.`
     throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
   }
 }

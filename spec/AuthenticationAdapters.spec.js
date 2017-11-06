@@ -4,7 +4,7 @@ var defaultColumns = require('../src/Controllers/SchemaController').defaultColum
 var authenticationLoader = require('../src/Adapters/Auth');
 var path = require('path');
 
-describe('AuthenticationProviers', function() {
+describe('AuthenticationProviders', function() {
   ["facebook", "github", "instagram", "google", "linkedin", "meetup", "twitter", "janrainengage", "janraincapture", "vkontakte"].map(function(providerName){
     it("Should validate structure of " + providerName, (done) => {
       var provider = require("../src/Adapters/Auth/" + providerName);
@@ -186,7 +186,7 @@ describe('AuthenticationProviers', function() {
             ok(!provider.synchronizedExpiration,
               "Expiration should be cleared");
             // make sure the auth data is properly deleted
-            var config = new Config(Parse.applicationId);
+            var config = Config.get(Parse.applicationId);
             config.database.adapter.find('_User', {
               fields: Object.assign({}, defaultColumns._Default, defaultColumns._Installation),
             }, { objectId: model.id }, {})
@@ -230,10 +230,10 @@ describe('AuthenticationProviers', function() {
     expect(typeof validator).toBe('function');
   }
 
-  function validateAuthenticationHandler(authenticatonHandler) {
-    expect(authenticatonHandler).not.toBeUndefined();
-    expect(typeof authenticatonHandler.getValidatorForProvider).toBe('function');
-    expect(typeof authenticatonHandler.getValidatorForProvider).toBe('function');
+  function validateAuthenticationHandler(authenticationHandler) {
+    expect(authenticationHandler).not.toBeUndefined();
+    expect(typeof authenticationHandler.getValidatorForProvider).toBe('function');
+    expect(typeof authenticationHandler.getValidatorForProvider).toBe('function');
   }
 
   function validateAuthenticationAdapter(authAdapter) {
