@@ -196,7 +196,7 @@ export function pushStatusHandler(config, existingObjectId) {
       {status: "running", count });
   }
 
-  const trackSent = function(results, UTCOffset, cleanupInstallations = process.env.PARSE_SERVER_CLEANUP_INVALID_INSTALLATIONS) {
+  const trackSent = function(results, UTCOffset, cleanupInstallations = process.env.PARSE_SERVER_CLEANUP_INVALID_INSTALLATIONS, failedNum = 0) {
     const update = {
       numSent: 0,
       numFailed: 0
@@ -235,7 +235,8 @@ export function pushStatusHandler(config, existingObjectId) {
         }
         return memo;
       }, update);
-      incrementOp(update, 'count', -results.length);
+      update.numFailed += failedNum;
+      incrementOp(update, 'count', -(results.length + failedNum));
     }
 
     logger.verbose(`_PushStatus ${objectId}: sent push! %d success, %d failures`, update.numSent, update.numFailed);
