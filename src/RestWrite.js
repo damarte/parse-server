@@ -24,7 +24,7 @@ import logger    from './logger';
 // RestWrite will handle objectId, createdAt, and updatedAt for
 // everything. It also knows to use triggers and special modifications
 // for the _User class.
-function RestWrite(config, auth, className, query, data, originalData, clientSDK) {
+function RestWrite(config, auth, className, query, data, originalData, clientSDK, options) {
   if (auth.isReadOnly) {
     throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Cannot perform a write operation when using readOnlyMasterKey');
   }
@@ -312,6 +312,7 @@ RestWrite.prototype.handleAuthData = function(authData) {
         // OR the user making the call is the right one
         // Login with auth data
         delete results[0].password;
+        const userResult = results[0];
 
         // need to set the objectId first otherwise location has trailing undefined
         this.data.objectId = userResult.objectId;
@@ -1218,6 +1219,7 @@ RestWrite.prototype._updateResponseWithData = function(response, data) {
   const clientSupportsDelete = ClientSDK.supportsForwardDelete(this.clientSDK);
   this.storage.fieldsChangedByTrigger.forEach(fieldName => {
     const dataValue = data[fieldName];
+    const responseValue = response[fieldName];
 
     if(!response.hasOwnProperty(fieldName)) {
       response[fieldName] = dataValue;

@@ -146,6 +146,7 @@ class ParseServer {
 
     api.use('/', bodyParser.urlencoded({extended: false}), new PublicAPIRouter().expressRouter());
 
+    api.use('/', middlewares.allowCrossDomain, new ImportRouter().expressRouter());
     api.use(bodyParser.json({ 'type': '*/*' , limit: maxUploadSize }));
     api.use(middlewares.allowCrossDomain);
     api.use(middlewares.allowMethodOverride);
@@ -196,6 +197,7 @@ class ParseServer {
       new FeaturesRouter(),
       new GlobalConfigRouter(),
       new PurgeRouter(),
+      new ExportRouter(),
       new HooksRouter(),
       new CloudCodeRouter(),
       new AudiencesRouter(),
