@@ -1,4 +1,5 @@
 import express          from 'express';
+import { loadAdapter } from '../Adapters/AdapterLoader';
 import * as middlewares from '../middlewares';
 import multer           from 'multer';
 import rest             from '../rest';
@@ -10,35 +11,36 @@ export class ImportRouter {
 
     const className = req.params.className;
 
+    const emailControllerAdapter = loadAdapter(req.config.emailAdapter);
+
     return req.config.database.loadSchema({clearCache: true})
-    .then(schemaController => schemaController.getOneSchema(className))
-    .catch(error => {
-      if (error === undefined) {
-        return Promise.reject(new Parse.Error(Parse.Error.INVALID_CLASS_NAME,
-        `Class ${className} does not exist.`));
-      } else {
-        return Promise.reject(new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR,
-        'Database adapter error.'));
-      }
-    });
+      .then(schemaController => schemaController.getOneSchema(className))
+      .catch(error => {
+        if (error === undefined) {
+          return Promise.reject(new Parse.Error(Parse.Error.INVALID_CLASS_NAME,
+            `Class ${className} does not exist.`));
+        } else {
+          return Promise.reject(new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR,
+            'Database adapter error.'));
+        }
+      });
   }
 
   importRestObject(req, restObject, targetClass) {
-
     if (targetClass) {
-      return rest.update(req.config, req.auth, req.params.className, restObject.owningId, {
+      return rest.update(req.config, req.auth, req.params.className, {objectId: restObject.owningId}, {
         [req.params.relationName]: {
           "__op": "AddRelation",
           "objects": [{"__type": "Pointer", "className": targetClass, "objectId": restObject.relatedId}]
         }
       }, req.info.clientSDK)
-      .catch(function (error) {
-        if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
-          return Promise.reject(new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found'));
-        } else {
-          return Promise.reject(error);
-        }
-      });
+        .catch(function (error) {
+          if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
+            return Promise.reject(new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found'));
+          } else {
+            return Promise.reject(error);
+          }
+        });
     }
 
     if (restObject.createdAt) {
@@ -51,21 +53,21 @@ export class ImportRouter {
 
     if (restObject.objectId) {
       return rest
-      .update(req.config, req.auth, req.params.className, restObject.objectId, restObject)
-      .catch(function (error) {
-        if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
-          return rest.create(
-            req.config,
-            req.auth,
-            req.params.className,
-            restObject,
-            req.info.clientSDK,
-            {allowObjectId: true}
-          );
-        } else {
-          return Promise.reject(error);
-        }
-      });
+        .update(req.config, req.auth, req.params.className, {objectId: restObject.objectId}, restObject, req.info.clientSDK)
+        .catch(function (error) {
+          if (error.code === Parse.Error.OBJECT_NOT_FOUND) {
+            return rest.create(
+              req.config,
+              req.auth,
+              req.params.className,
+              restObject,
+              req.info.clientSDK,
+              {allowObjectId: true}
+            )
+          } else {
+            return Promise.reject(error);
+          }
+        });
     }
 
     return rest.create(req.config, req.auth, req.params.className, restObject);
@@ -96,7 +98,7 @@ export class ImportRouter {
       }
 
       if (req.body.feedbackEmail) {
-        if (!req.config.emailControllerAdapter) {
+        if (!emailControllerAdapter) {
           throw new Error('You have to setup a Mail Adapter.');
         }
       }
@@ -111,70 +113,69 @@ export class ImportRouter {
 
     if (req.params.relationName) {
       promise = this.getOneSchema(req)
-      .then((response) => {
-        if (!response.fields.hasOwnProperty(req.params.relationName)) {
-          throw new Error(`Relation ${req.params.relationName} does not exist in ${req.params.className}.`);
-        } else if (response.fields[req.params.relationName].type !== 'Relation') {
-          throw new Error(`Class ${response.fields[req.params.relationName].targetClass} does not have Relation type.`);
-        }
+        .then((response) => {
+          if (!response.fields.hasOwnProperty(req.params.relationName)) {
+            throw new Error(`Relation ${req.params.relationName} does not exist in ${req.params.className}.`);
+          } else if (response.fields[req.params.relationName].type !== 'Relation') {
+            throw new Error(`Class ${response.fields[req.params.relationName].targetClass} does not have Relation type.`);
+          }
 
-        const targetClass = response.fields[req.params.relationName].targetClass;
+          const targetClass = response.fields[req.params.relationName].targetClass;
 
-        return Promise.all([this.getRestObjects(req), targetClass]);
-      });
+          return Promise.all([this.getRestObjects(req), targetClass]);
+        });
     }
     else {
       promise = Promise.all([this.getRestObjects(req)]);
     }
 
     promise = promise
-    .then(([restObjects, targetClass]) => {
+      .then(([restObjects, targetClass]) => {
 
-      return restObjects.reduce((item, object, index) => {
+        return restObjects.reduce((item, object, index) => {
 
-        item.pageArray.push(this.importRestObject.bind(this, req, object, targetClass));
+          item.pageArray.push(this.importRestObject.bind(this, req, object, targetClass));
 
-        if (index && index % 100 === 0 || index === (restObjects.length - 1)) {
+          if (index && index % 100 === 0 || index === (restObjects.length - 1)) {
 
-          const pageArray = item.pageArray.slice(0);
-          item.pageArray = [];
+            const pageArray = item.pageArray.slice(0);
+            item.pageArray = [];
 
-          item.mainPromise = item.mainPromise
-          .then((results) => {
-            return Promise.all(results.concat(pageArray.map(func => func())));
+            item.mainPromise = item.mainPromise
+              .then((results) => {
+                return Promise.all(results.concat(pageArray.map(func => func())));
+              });
+
+          }
+
+          return item;
+        }, { pageArray: [], mainPromise : Promise.resolve([]) }).mainPromise;
+      })
+      .then((results) => {
+        if (req.body.feedbackEmail) {
+          emailControllerAdapter.sendMail({
+            text: `We have successfully imported your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }.`,
+            to: req.body.feedbackEmail,
+            subject: 'Import completed'
           });
-
+        } else {
+          return Promise.resolve({ response: results });
+        }
+      })
+      .catch((error) => {
+        if (req.body.feedbackEmail) {
+          emailControllerAdapter.sendMail({
+            text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${error}`,
+            to: req.body.feedbackEmail,
+            subject: 'Import failed'
+          });
+        } else {
+          throw new Error('Internal server error: ' + error);
         }
 
-        return item;
-      }, { pageArray: [], mainPromise : Promise.resolve([]) }).mainPromise;
-    })
-    .then((results) => {
+      });
 
-      if (req.body.feedbackEmail) {
-        req.config.emailControllerAdapter.sendMail({
-          text: `We have successfully imported your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }.`,
-          to: req.body.feedbackEmail,
-          subject: 'Import completed'
-        });
-      } else {
-        return Promise.resolve({ response: results });
-      }
-    })
-    .catch((error) => {
-      if (req.body.feedbackEmail) {
-        req.config.emailControllerAdapter.sendMail({
-          text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${error}`,
-          to: req.body.feedbackEmail,
-          subject: 'Import failed'
-        });
-      } else {
-        throw new Error(`Internal server error: ${error}`);
-      }
-
-    });
-
-    if (req.body.feedbackEmail && req.config.emailControllerAdapter) {
+    if (req.body.feedbackEmail && emailControllerAdapter) {
       promise = Promise.resolve({ response: 'We are importing your data. You will be notified by e-mail once it is completed.' });
     }
 
@@ -183,12 +184,12 @@ export class ImportRouter {
 
   wrapPromiseRequest(req, res, handler) {
     return handler(req)
-    .then((data) => {
-      res.json(data);
-    })
-    .catch((err) => {
-      res.status(400).send({ message: err.message });
-    })
+      .then((data) => {
+        res.json(data);
+      })
+      .catch((err) => {
+        res.status(400).send({ message: err.message });
+      })
   }
 
   expressRouter() {

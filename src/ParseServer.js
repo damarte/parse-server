@@ -35,6 +35,8 @@ import { UsersRouter }          from './Routers/UsersRouter';
 import { PurgeRouter }          from './Routers/PurgeRouter';
 import { AudiencesRouter }      from './Routers/AudiencesRouter';
 import { AggregateRouter }      from './Routers/AggregateRouter';
+import { ImportRouter }      from './Routers/ImportRouter';
+import { ExportRouter }      from './Routers/ExportRouter';
 
 import { ParseServerRESTController } from './ParseServerRESTController';
 import * as controllers from './Controllers';

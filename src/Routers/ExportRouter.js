@@ -1,4 +1,5 @@
 import PromiseRouter   from '../PromiseRouter';
+import { loadAdapter } from '../Adapters/AdapterLoader';
 import rest            from '../rest';
 import archiver        from 'archiver';
 import tmp             from 'tmp';
@@ -19,21 +20,21 @@ export class ExportRouter extends PromiseRouter {
     };
 
     const findPromise = name.indexOf('_Join') === 0 ?
-    databaseController.adapter.find(name, relationSchema, where, options)
-    : rest.find(req.config, req.auth, name,  where, options);
+      databaseController.adapter.find(name, relationSchema, where, options)
+      : rest.find(req.config, req.auth, name,  where, options);
 
     return findPromise
-    .then((data) => {
-      if (Array.isArray(data)) {
-        data = { results : data };
-      }
+      .then((data) => {
+        if (Array.isArray(data)) {
+          data = { results : data };
+        }
 
-      if (skip && data.results.length) {
-        jsonFileStream.write(',\n');
-      }
+        if (skip && data.results.length) {
+          jsonFileStream.write(',\n');
+        }
 
-      jsonFileStream.write(JSON.stringify(data.results, null, 2).substr(1).slice(0, -1));
-    });
+        jsonFileStream.write(JSON.stringify(data.results, null, 2).substr(1).slice(0,-1));
+      });
   }
 
   exportClass(req, data) {
@@ -46,13 +47,14 @@ export class ExportRouter extends PromiseRouter {
     jsonFileStream.write('{\n"results" : [\n');
 
     const findPromise = data.name.indexOf('_Join') === 0 ?
-      databaseController.adapter.count(data.name, relationSchema, data.where) :
-      rest.find(req.config, req.auth, data.name, data.where, {count: true, limit: 0});
+      databaseController.adapter.count(data.name, relationSchema, data.where)
+      : rest.find(req.config, req.auth, data.name,  data.where, { count: true, limit: 0 });
 
     return findPromise
       .then((result) => {
+
         if (Number.isInteger(result)) {
-          result = {count: result};
+          result = { count: result };
         }
 
         let i = 0;
@@ -77,7 +79,7 @@ export class ExportRouter extends PromiseRouter {
         return new Promise((resolve) => {
 
           jsonFileStream.on('close', () => {
-            tmpJsonFile._name = `${data.name.replace(/:/g, '꞉')}.json`;
+            tmpJsonFile._name = `${data.name.replace(/:/g,'꞉')}.json`;
 
             resolve(tmpJsonFile);
           });
@@ -95,15 +97,16 @@ export class ExportRouter extends PromiseRouter {
     };
 
     return databaseController.find(DefaultExportExportProgressCollectionName, query)
-    .then((response) => {
-      return { response };
-    });
+      .then((response) => {
+        return { response };
+      });
   }
 
   handleExport(req) {
+
     const databaseController = req.config.database;
 
-    const emailControllerAdapter = req.config.emailControllerAdapter;
+    const emailControllerAdapter = loadAdapter(req.config.emailAdapter);
 
     if (!emailControllerAdapter) {
       return Promise.reject(new Error('You have to setup a Mail Adapter.'));
@@ -116,79 +119,76 @@ export class ExportRouter extends PromiseRouter {
     };
 
     databaseController.create(DefaultExportExportProgressCollectionName, exportProgress)
-    .then(() => {
-      return databaseController.loadSchema({ clearCache: true});
-    })
-    .then(schemaController => schemaController.getOneSchema(req.body.name, true))
-    .then((schema) => {
-      const classNames = [ req.body.name ];
-      const where = req.body.where;
-      Object.keys(schema.fields).forEach((fieldName) => {
-        const field = schema.fields[fieldName];
+      .then(() => {
+        return databaseController.loadSchema({ clearCache: true});
+      })
+      .then(schemaController => schemaController.getOneSchema(req.body.name, true))
+      .then((schema) => {
+        const classNames = [ req.body.name ];
+        Object.keys(schema.fields).forEach((fieldName) => {
+          const field = schema.fields[fieldName];
 
-        if (field.type === 'Relation') {
-          classNames.push(`_Join:${fieldName}:${req.body.name}`);
-        }
-      });
-
-      const promises = classNames.map((name) => {
-        return this.exportClass(req, { name, where });
-      });
-
-      return Promise.all(promises)
-    })
-    .then((jsonFiles) => {
-
-      return new Promise((resolve) => {
-        const tmpZipFile = tmp.fileSync();
-        const tmpZipStream = fs.createWriteStream(tmpZipFile.name);
-
-        const zip  = archiver('zip');
-        zip.pipe(tmpZipStream);
-
-        jsonFiles.forEach(tmpJsonFile => {
-          zip.append(fs.readFileSync(tmpJsonFile.name), { name:  tmpJsonFile._name });
-          tmpJsonFile.removeCallback();
+          if (field.type === 'Relation') {
+            classNames.push(`_Join:${fieldName}:${req.body.name}`);
+          }
         });
 
-        zip.finalize();
-
-        tmpZipStream.on('close', () => {
-
-          const buf = fs.readFileSync(tmpZipFile.name);
-          tmpZipFile.removeCallback();
-          resolve(buf);
-
+        const promisses = classNames.map((name) => {
+          return this.exportClass(req, { name });
         });
-      });
 
-    })
-    .then((zippedFile) => {
-      const filesController = req.config.filesController;
-      return filesController.createFile(req.config, req.body.name, zippedFile, 'application/zip');
-    })
-    .then((fileData) => {
-      return emailControllerAdapter.sendMail({
-        text: `Successfully exported data from class ${req.body.name}.\n
+        return Promise.all(promisses)
+      })
+      .then((jsonFiles) => {
+
+        return new Promise((resolve) => {
+          const tmpZipFile = tmp.fileSync();
+          const tmpZipStream = fs.createWriteStream(tmpZipFile.name);
+
+          const zip  = archiver('zip');
+          zip.pipe(tmpZipStream);
+
+          jsonFiles.forEach(tmpJsonFile => {
+            zip.append(fs.readFileSync(tmpJsonFile.name), { name:  tmpJsonFile._name });
+            tmpJsonFile.removeCallback();
+          });
+
+          zip.finalize();
+
+          tmpZipStream.on('close', () => {
+
+            const buf = fs.readFileSync(tmpZipFile.name);
+            tmpZipFile.removeCallback();
+            resolve(buf);
+
+          });
+        });
+
+      })
+      .then((zippedFile) => {
+        const filesController = req.config.filesController;
+        return filesController.createFile(req.config, req.body.name, zippedFile, 'application/zip');
+      })
+      .then((fileData) => {
+
+        return emailControllerAdapter.sendMail({
+          text: `We have successfully exported your data from the class ${req.body.name}.\n
         Please download from ${fileData.url}`,
-        link: fileData.url,
-        to: req.body.feedbackEmail,
-        subject: 'Export completed'
+          link: fileData.url,
+          to: req.body.feedbackEmail,
+          subject: 'Export completed'
+        });
+      })
+      .catch((error) => {
+        return emailControllerAdapter.sendMail({
+          text: `We could not export your data to the class ${req.body.name}. Error: ${error}`,
+          to: req.body.feedbackEmail,
+          subject: 'Export failed'
+        });
+      })
+      .then(() => {
+        return databaseController.destroy(DefaultExportExportProgressCollectionName, exportProgress);
       });
-    })
-    .catch((error) => {
-      return emailControllerAdapter.sendMail({
-        text: `Could not export data from class ${req.body.name}. Error: ${error}`,
-        to: req.body.feedbackEmail,
-        subject: 'Export failed'
-      });
-    })
-    .catch(() => {
-      return Promise.resolve();
-    })
-    .then(() => {
-      return databaseController.destroy(DefaultExportExportProgressCollectionName, exportProgress);
-    });
 
     return Promise.resolve({response: 'We are exporting your data. You will be notified by e-mail once it is completed.'});
   }
