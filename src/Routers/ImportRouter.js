@@ -164,7 +164,7 @@ export class ImportRouter {
     .catch((error) => {
       if (req.body.feedbackEmail) {
         req.config.emailControllerAdapter.sendMail({
-          text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${error}`,
+          text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${JSON.stringify(error)}`,
           to: req.body.feedbackEmail,
           subject: 'Import failed'
         });
