@@ -49,7 +49,7 @@ function handleImport(req, res) {
       })
       .catch((error) => {
         emailControllerAdapter.sendMail({
-          text: `We could not import your data to the class ${req.params.className}. Error: ${error}`,
+          text: `We could not import your data to the class ${req.params.className}. Error: ${JSON.stringify(error)}`,
           to: req.body.feedbackEmail,
           subject: 'Import failed'
         });
