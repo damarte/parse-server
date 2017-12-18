@@ -1,4 +1,5 @@
 import PromiseRouter   from '../PromiseRouter';
+import { loadAdapter } from '../Adapters/AdapterLoader';
 import rest            from '../rest';
 import archiver        from 'archiver';
 import tmp             from 'tmp';
@@ -105,7 +106,7 @@ export class ExportRouter extends PromiseRouter {
 
     const databaseController = req.config.database;
 
-    const emailControllerAdapter = req.config.emailAdapter;
+    const emailControllerAdapter = loadAdapter(req.config.emailAdapter);
 
     if (!emailControllerAdapter) {
       return Promise.reject(new Error('You have to setup a Mail Adapter.'));
