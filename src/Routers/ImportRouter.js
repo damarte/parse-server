@@ -11,8 +11,6 @@ export class ImportRouter {
 
     const className = req.params.className;
 
-    const emailControllerAdapter = loadAdapter(req.config.emailAdapter);
-
     return req.config.database.loadSchema({clearCache: true})
       .then(schemaController => schemaController.getOneSchema(className))
       .catch(error => {
@@ -98,7 +96,7 @@ export class ImportRouter {
       }
 
       if (req.body.feedbackEmail) {
-        if (!emailControllerAdapter) {
+        if (!req.config.emailAdapter) {
           throw new Error('You have to setup a Mail Adapter.');
         }
       }
@@ -108,6 +106,8 @@ export class ImportRouter {
   }
 
   handleImport(req) {
+
+    const emailControllerAdapter = loadAdapter(req.config.emailAdapter);
 
     let promise = null;
 
