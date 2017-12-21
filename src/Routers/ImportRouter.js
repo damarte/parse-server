@@ -80,7 +80,7 @@ export class ImportRouter {
       try {
         importFile = JSON.parse(req.file.buffer.toString());
       } catch (e) {
-        throw new Error('Failed to parse JSON based on the file sent');
+        throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'Failed to parse JSON based on the file sent');
       }
 
       if (Array.isArray(importFile)) {
@@ -91,8 +91,8 @@ export class ImportRouter {
         restObjects = importFile.rows;
       }
 
-      if (!restObjects) {
-        throw new Error('No data to import');
+      if (restObjects.length === 0) {
+        throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'No data to import');
       }
 
       if (req.body.feedbackEmail) {
