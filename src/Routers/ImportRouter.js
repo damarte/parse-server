@@ -91,7 +91,7 @@ export class ImportRouter {
         restObjects = importFile.rows;
       }
 
-      if (!restObjects) {
+      if (restObjects.length === 0) {
         throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'No data to import');
       }
 
