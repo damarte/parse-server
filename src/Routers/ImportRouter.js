@@ -23,7 +23,7 @@ function handleImport(req, res) {
     restObjects = importFile.rows;
   }
 
-  if (!restObjects) {
+  if (restObjects.length === 0) {
     res.status(400);
     res.json({ response: 'No data to import' });
     return;
