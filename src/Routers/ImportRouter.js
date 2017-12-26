@@ -80,7 +80,7 @@ export class ImportRouter {
       try {
         importFile = JSON.parse(req.file.buffer.toString());
       } catch (e) {
-        throw new Error('Failed to parse JSON based on the file sent');
+        throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'Failed to parse JSON based on the file sent');
       }
 
       if (Array.isArray(importFile)) {
@@ -91,8 +91,8 @@ export class ImportRouter {
         restObjects = importFile.rows;
       }
 
-      if (!restObjects) {
-        throw new Error('No data to import');
+      if (restObjects.length === 0) {
+        throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'No data to import');
       }
 
       if (req.body.feedbackEmail) {
@@ -165,7 +165,7 @@ export class ImportRouter {
       .catch((error) => {
         if (req.body.feedbackEmail) {
           emailControllerAdapter.sendMail({
-            text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${error}`,
+            text: `We could not import your data to the class ${req.params.className}${req.params.relationName ? ', relation ' + req.params.relationName : '' }. Error: ${JSON.stringify(error)}`,
             to: req.body.feedbackEmail,
             subject: 'Import failed'
           });
